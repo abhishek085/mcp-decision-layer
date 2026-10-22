@@ -93,3 +93,18 @@ Prompts frozen as of commit following this entry (SYS_A / SYS_C in gateway/gw.py
 ## STATUS / NEXT (end of first session segment)
 Done: Phase 0 (partial: PREREG.md NOT written yet — TODO before any further results count as confirmatory), Phase 1 (Qwen + spark-s1; Gemma partial: server up, smoke test not yet run; Nemotron not loaded due to memory), Phase 2 slice, Phase 3 slice (18 tasks, no paraphrase pipeline), Phase 4 pilot (A, C on Qwen).
 Next: (1) write PREREG.md and commit; (2) Gemma smoke test; Nemotron needs memory (free RAM ~18 GB with Qwen+Gemma+spark-s1 resident; likely requires stopping mdl-gemma while it loads/runs); (3) Phase 5 mode B (spark-s1 tool selection designs) — needs more tools/distractors to be meaningful; (4) serial latency pass; (5) Phase 6 oracle gap; (6) Phase 7 D-rules; (7) Phase 8 security.
+
+## E1.4 — Smoke test: Gemma-4-26B-A4B NVFP4 (vLLM, --tool-call-parser gemma4, ctx 65,536)
+Function calling 10/10 (0.55 s avg), script writing OK, decode 30.7 tok/s single / 254.9 aggregate at c8, 200-tool catalog = 44,258 tokens, correct pick, 23 s. PASS. PREREG.md committed (late; flagged in the file).
+## E4.3 — Pilot A vs C on Gemma (seeds 0,1,2, conc 8) — running
+
+### E4.3 results — Pilot A vs C on Gemma-4-26B-A4B (SUT-2), 18 tasks × seeds 0,1,2, thinking flag passed (ignored by vLLM/Gemma), conc 8
+Trace: traces/pilot_gemma_AC_s012_nothink.jsonl · Summary: traces/pilot_gemma_summary.txt · wall 307 s
+| | n | success | mean tokens | schema tok | latency (conc 8, not clean) |
+|---|---|---|---|---|---|
+| A | 54 | 0.870 | 7,174 | 5,132 | 10.6 s |
+| C | 54 | 0.815 | 6,375 | 628 | 30.4 s |
+Fresh seeds only (n=36 pairs): success diff C−A −0.028, 95% CI [−0.194, +0.139]; tokens diff −2,500, CI [−8,414, +1,331] (NOT significant).
+Per family: C better on log_scan (1.00 vs 0.33); C worse on join_agg (0.33 vs 0.83), bill_sum (0.33 vs 0.67), log_agg (0.67 vs 1.00; uses 3× tokens). 
+Failure modes: 7+ of 10 C failures involve sandbox errors (topassign-cinder: all 3 executions error in 2 of 3 seeds) — Gemma writes buggier scripts than Qwen; A's log_scan failure (0.33) happens with only ~3.4K tokens → Gemma answers from a first page of logs rather than paging all of them (premature answer, not turn-cap exhaustion as for Qwen).
+Outcome: SUT-dependent. Qwen: C ≈ A success, −41% tokens. Gemma: C slightly lower success (−5.5 pp all seeds), ~−11% tokens, much slower latency (30 s vs 11 s: sandbox retries + vLLM at 30 tok/s). Direction of the token saving is the same; magnitude and success parity are not. This is a first sign that per-SUT shape choice may matter (relevant to Phase 6 oracle gap). Not confirmatory.

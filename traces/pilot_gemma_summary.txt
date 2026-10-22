@@ -1,0 +1,18 @@
+## ALL seeds
+ A: n=54 success=0.870 tokens=7174 schema=5132 backend_result_tok=837 ctx_result_tok=837 lat=10.6s err=0
+ C: n=54 success=0.815 tokens=6375 schema=628 backend_result_tok=2053 ctx_result_tok=620 lat=30.4s err=0
+## fresh seeds (1,2) only
+ A: n=36 success=0.861 tokens=8280 schema=5599 backend_result_tok=854 ctx_result_tok=854 lat=10.8s err=0
+ C: n=36 success=0.833 tokens=5780 schema=612 backend_result_tok=2062 ctx_result_tok=609 lat=26.1s err=0
+## by family (success A/C, tokens A/C)
+ bill_sum     A: 0.67 / 2745 | C: 0.33 / 7263
+ chain_dm     A: 1.00 / 4923 | C: 1.00 / 4073
+ explore      A: 1.00 / 4748 | C: 1.00 / 2376
+ join_agg     A: 0.83 / 25571 | C: 0.33 / 16955
+ log_agg      A: 1.00 / 2140 | C: 0.67 / 6479
+ log_scan     A: 0.33 / 3449 | C: 1.00 / 5957
+ lookup       A: 1.00 / 3507 | C: 1.00 / 3096
+ refund_cond  A: 1.00 / 3756 | C: 1.00 / 5048
+ reminder     A: 1.00 / 7128 | C: 0.94 / 4712
+paired C-A success (fresh seeds): mean=-0.028 CI95=[-0.194, 0.139] n=36
+paired C-A total_tokens (fresh seeds): mean=-2499.861 CI95=[-8414.222, 1330.944] n=36
