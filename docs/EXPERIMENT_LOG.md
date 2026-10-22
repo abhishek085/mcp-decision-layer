@@ -58,3 +58,17 @@ Gemma 4 26B-A4B NVFP4 in vLLM: only ~29 tok/s single stream (Qwen tensorfold get
 
 ## Git
 Committed locally (dc0392d). `git push` failed: no GitHub credentials on this machine (https://github.com/abhishek085/mcp-decision-layer.git). Needs the user to configure auth; commits continue locally.
+
+## E4.1 — Pilot v1: A vs C on Qwen3.8-27B (dev seed 0, thinking off, 18 tasks) — HARNESS BUG FOUND
+Trace: traces/pilot_qwen_AC_s0_nothink_v1_harnessbug.jsonl
+| | success | mean total tokens | mean latency (conc 4) |
+|---|---|---|---|
+| A | 17/18 (0.94) | 24,812 | 39.1 s |
+| C | 10/18 (0.56) | 8,866 | 22.6 s |
+Diagnosis (plan Phase 4 gate "if C cannot match A on simple tasks, fix sandbox and prompt"): 8 C failures were all sandbox errors from MY harness, not model capability: (1) sandbox wrappers accepted only keyword args while stubs showed positional signatures → `TypeError: post_message() takes 0 positional arguments`; (2) the stub text looked like code so the model pasted it into its script, redefining tools with `raise NotImplementedError`. Fix: wrappers accept positional args in schema order; stubs rendered as comment-annotated call signatures; system prompt says tools are already defined. After fix the 4 re-tested failing tasks pass (4/4).
+A failures/outliers (valid, model-driven): logscan-api A=fail with 221,073 tokens (paged raw logs through context, hit turn cap); topassign-beacon A used 94,947 tokens (C: 11,179). This is the H1 effect (large intermediate results).
+Caveat: the prompt/stub fix was found using dev salt, seed 0 worlds — the same worlds as pilot v1. v2 adds seeds 1 and 2 as untouched data; seed 0 numbers are tuned-on. Fix applied to C's harness only because it was a bug; A had no equivalent bug (equal-effort rule satisfied by reporting this).
+Verified: bridge correctness test (list_issues + post_message through RPC) passes.
+
+## E4.2 — Pilot v2 (A and C, seeds 0,1,2) — running
+traces/pilot_qwen_AC_s012_nothink_v2.jsonl

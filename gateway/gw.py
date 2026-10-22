@@ -11,7 +11,7 @@ def ntok(x): return len(ENC.encode(x if isinstance(x, str) else json.dumps(x)))
 SYS_A = "You are an agent that completes tasks by calling the provided tools. Call tools as needed (several per turn is fine). When the task is complete, reply with a brief final answer only."
 SYS_C = """You are an agent that completes tasks by writing Python code against tools exposed through two meta tools:
 - search(query): returns Python stubs (signature + docstring) for tools matching the query. Call it first to discover tools. Use a few keywords.
-- execute(code): runs your Python script in a sandbox where every discovered tool is available as a plain function returning parsed JSON (dict/list). Use print() to output ONLY the compact final result you need; large raw data must be processed inside the script, not printed.
+- execute(code): runs your Python script in a sandbox where every tool is ALREADY DEFINED as a plain function (positional or keyword args) returning parsed JSON (dict/list). Never redefine or stub these functions; just call them. Use print() to output ONLY the compact final result you need; large raw data must be processed inside the script, not printed.
 Write one complete script that does the whole task (loops, filtering, paging, side effects). If it errors, fix and re-run (max 3 executions). When finished, reply with a brief final answer only (for side-effect tasks reply 'done')."""
 
 class Hub:
@@ -45,7 +45,7 @@ def stub(t):
     ty = {"string": "str", "integer": "int", "number": "float", "boolean": "bool"}
     ps = [f"{k}: {ty.get(v.get('type'), 'object')}" + ("" if k in req else (" = " + repr(v.get("default", "")))) for k, v in props.items()]
     ps.sort(key=lambda s: "=" in s)
-    return f'def {t["name"]}({", ".join(ps)}) -> dict | list:\n    """{t["description"]}"""'
+    return f'# already defined in the sandbox, just call it:\n{t["name"]}({", ".join(ps)}) -> dict | list   # {t["description"]}'
 
 SANDBOX_PRELUDE = '''
 import sys, json
@@ -56,11 +56,16 @@ def _rpc(name, **kw):
     try: return json.loads(r)
     except Exception: return r
 '''
-def sandbox_wrappers(names): return "\n".join(f"def {n}(**kw): return _rpc({n!r}, **kw)" for n in names)
+def sandbox_wrappers(tools):
+    out = []
+    for t in tools:
+        order = list(t["schema"].get("properties", {}))
+        out.append(f"def {t['name']}(*a, **kw):\n    kw.update(dict(zip({order!r}, a)))\n    return _rpc({t['name']!r}, **kw)")
+    return "\n".join(out)
 
 async def run_sandbox(hub, code, names, timeout=60, max_calls=400):
     """Subprocess sandbox: no network use by design (only RPC to gateway). Rlimits applied. (Container isolation: TODO, logged.)"""
-    script = SANDBOX_PRELUDE + sandbox_wrappers(names) + "\n" + code
+    script = SANDBOX_PRELUDE + sandbox_wrappers([hub.tools[n] for n in names]) + "\n" + code
     import resource
     def lim():
         resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30)); resource.setrlimit(resource.RLIMIT_CPU, (timeout, timeout))
@@ -144,7 +149,7 @@ async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, 
                         else:
                             m["exec_calls"] += 1; t1 = time.time()
                             ok, res, nc = await run_sandbox(hub, args.get("code", ""), names)
-                            steps.append(dict(kind="sandbox", ok=ok, ms=int((time.time() - t1) * 1000), tool_calls=nc))
+                            steps.append(dict(kind="sandbox", ok=ok, ms=int((time.time() - t1) * 1000), tool_calls=nc, out=res[:400], code=args.get("code", "")[:1500]))
                     else: res = "unknown tool"
                     m["result_tokens"] += ntok(res)
                     msgs.append({"role": "tool", "tool_call_id": tc.id, "content": res})
