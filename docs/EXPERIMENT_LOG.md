@@ -304,3 +304,18 @@ Impact on prior conclusions: E7.0/E7.1 (Qwen B/D) used UNHINTED stubs; D/llm/cod
 ## E6.6 — Held-out shape-routing test design (bench/heldout_gap.py)
 Concern: the oracle gap on seeds 0–2 is biased upward (oracle = max of two noisy single runs, labels from the same cells). Test: learn best shape per task FAMILY and per task id on seeds 0–2, apply to fresh world instances (seeds 3,4,5, dev salt), compare U vs best fixed shape with paired bootstrap. Gemma first (A and hinted C on seeds 3–5, traces/p8_gemma_AC_hinted_s345.jsonl).
 Infra note (E6.5): one Gemma hinted-C run hung and did not honour the 900 s asyncio cap (task cancellation did not unwind — process still alive at 1,117 s); process killed (SIGKILL), cell excluded (118 of 119). Analysis now uses A-only baseline files + the hinted C file so the missing cell is dropped rather than back-filled from unhinted C.
+
+### E6.5 results — Gemma C with return-shape hints, 118 of 119 cells (1 hung run excluded)
+Trace: traces/p6_gemma_C_stubreturns_s012.jsonl · analysis: traces/p6_gemma_hinted_oracle_gap.txt
+| Gemma | success | notes |
+|---|---|---|
+| C, no hints (E6.1) | 0.664 | |
+| C, hints | **0.864** | +20 pp from stub quality alone |
+| A | 0.831 | |
+Primary-λ U: always-A 0.654 | always-C 0.779 | rule (LOSO) 0.832 | oracle 0.889 → **oracle gap 0.110 (was 0.219 unhinted); rule captures 49%**. Winners: C 100, A 18. Gaps remain for fan-out=1 (0.191), 'fixed' adaptivity (0.172), 3-server tasks (0.093; C U +0.40 vs A +0.79).
+### E6.6 results — Held-out shape routing, Gemma, hinted C (train seeds 0–2 → test seeds 3–5, 116 fresh cells; traces/p8_gemma_AC_hinted_s345.jsonl, analysis traces/p8_gemma_heldout.txt)
+Test seeds: A success 0.814 / 14.9K tokens; C success 0.905 / 4.0K tokens. U(tok): always-A 0.661 | always-C 0.866 | **family-label router 0.916** | task-id router 0.916 | test oracle (in-sample, biased) 0.939.
+Family router minus best-fixed (always-C): **+0.051, 95% CI [+0.003, +0.106]**; task-id router +0.051 [+0.004, +0.105]; family label agrees with test oracle on 87% of cells; router captures ≈70% of the test-oracle gap (0.073).
+Reading: for Gemma there IS learnable, transferable signal for the shape decision (the label learned on seeds 0–2 generalises to unseen world instances), modest in size (~5 pp of U), CI lower bound barely above 0. The signal is at task-family granularity (family router = task-id router), i.e. a classifier on the task type suffices; it does not need fine per-instance features. Not tested: unseen task families (the plan's family-held-out split), unseen servers, other SUTs.
+Gate status (PREREG Phase 6; thresholds gap > 0.03 and rule captures < 60%), with hinted stubs (the fair setting): Qwen gap 0.023 / rule 8% → NOT met; Gemma 0.110 / 49% → met; Nemotron 0.084 / −7% → met. 2 of 3 SUTs meet it, with capability-dependent best shape (Qwen: C always; Gemma/Nemotron: C mostly with a tail of A-better families — cross3, bill_sum, doc tasks). Infra: 4 of 238 held-out runs hung (cancellation does not unwind) and were excluded; process killed.
+Decision note: proceed to training (Phases 9–10) is a major GPU-heavy step; evidence supports a modest gain on code-weak SUTs and none on Qwen. Left for user decision; cheaper intermediate: a per-family lookup table baseline already captures it.

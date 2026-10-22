@@ -1,0 +1,5 @@
+SUT=gemma train seeds [0, 1, 2] -> test seeds [3, 4, 5]: 116 held-out cells (U with lambda_t=0.01, no latency)
+always-A 0.661 | always-C 0.866 | family-label router 0.916 (unseen 0) | task-id router 0.916 (unseen 1) | test-oracle (in-sample, biased) 0.939
+  family router minus best-fixed(C): +0.051  95% CI [+0.003, +0.106]
+  task-id router minus best-fixed(C): +0.051  95% CI [+0.004, +0.105]
+  label agreement fam-vs-oracle on test: 0.87
