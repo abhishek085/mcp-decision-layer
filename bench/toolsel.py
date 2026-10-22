@@ -17,6 +17,7 @@ def catalog(n_dist):
 def short(d, n=160): return re.sub(r"\s+", " ", d)[:n]
 
 def spark_bool(state, items, maxq=250):
+    from gateway.thermal import wait_cool_sync; wait_cool_sync()
     """items: list of (id, question text) -> {id: P(true)}. Chunked."""
     out = {}; toks = 0; t0 = time.time()
     for i in range(0, len(items), maxq):

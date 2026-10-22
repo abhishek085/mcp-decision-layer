@@ -15,6 +15,7 @@ THETA = 0.002; TAU = 0.0; RULE_P = dict(min_large=1, fanout=5, chain=99); ORACLE
 
 async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dist=0):
     async with sem:
+        from gateway.thermal import wait_cool; await wait_cool()
         w = World(seed, size, salt); snap = w.state_hash()
         task = [t for t in build_suite(w) if t.id == task_id][0]
         base, model = SUT[sut]; client = AsyncOpenAI(base_url=base, api_key="x", timeout=600)

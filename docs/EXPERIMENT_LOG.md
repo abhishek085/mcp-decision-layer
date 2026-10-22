@@ -162,3 +162,8 @@ Note: the 'llm' selector calls Gemma while a Qwen SUT is running → latency of 
 
 ## E6.0 — Phase 6 data collection (running): A and C, Qwen, 39-task suite × seeds 0,1,2 (dev salt, medium), thinking off, conc 4
 traces/p6_qwen_AC_s012.jsonl
+
+## E0.4 — Thermal incident (2026-10-22 ~08:35 UTC) 
+Symptom: toolsel (200-tool) run stalled; `osj-jev-vllm` showed `Up (Paused)`. Cause: the user's own `thermal_guard.sh` (running since Oct 03) does `docker pause osj-*` at ≥91 °C and unpauses below 85 °C (both GPU and SoC sensors). Sensors: SoC thermal zones read 92–93 °C while Qwen served 4 concurrent streams + spark-s1 + Gemma router calls (GPU 82–83 °C). 92–95 °C is the machine's protective-throttle/shutdown range.
+Action: I did NOT touch the guard or unpause manually. I killed my own jobs (toolsel 158 run; p6 Qwen A/C run, 15 of 234 runs done, partial file traces/p6_qwen_AC_s012.jsonl to be discarded/re-run). Idle cooldown: 93 → 64 °C within ~30 s; guard unpaused spark-s1 automatically.
+Mitigation: gateway/thermal.py self-throttle (no new run/router call while any thermal zone ≥ 86 °C); concurrency kept ≤ 3 for Qwen. Consequence: wall-clock for long runs is longer; latencies taken during hot periods are unreliable.

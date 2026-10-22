@@ -18,6 +18,7 @@ def embed_rank(task, tools):
     return list(np.argsort(-(_cache[key] @ qv)))
 
 def spark_bool(state, items, maxq=250):
+    from gateway.thermal import wait_cool_sync; wait_cool_sync()
     out = {}; toks = 0
     for i in range(0, len(items), maxq):
         qs = [dict(id=k, type="boolean", instructions=q) for k, q in items[i:i + maxq]]
