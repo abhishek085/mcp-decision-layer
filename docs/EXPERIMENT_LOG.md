@@ -72,3 +72,24 @@ Verified: bridge correctness test (list_issues + post_message through RPC) passe
 
 ## E4.2 — Pilot v2 (A and C, seeds 0,1,2) — running
 traces/pilot_qwen_AC_s012_nothink_v2.jsonl
+
+### E4.2 results — Pilot v2, Qwen3.8-27B, thinking OFF, A vs C, 18 tasks × seeds 0,1,2 (dev salt), conc 4
+Trace: traces/pilot_qwen_AC_s012_nothink_v2.jsonl · Summary script: bench/summarize.py · wall 528 s
+| | n | success | mean total tokens | schema tok/run | result tok into context | latency (conc 4, NOT a clean latency number) |
+|---|---|---|---|---|---|---|
+| A (all seeds) | 54 | 0.926 | 15,525 | 6,093 | 1,032 | 22.0 s |
+| C (all seeds) | 54 | 0.926 | 6,581 | 536 | 991 | 16.7 s |
+| A (fresh seeds 1,2) | 36 | 0.917 | 10,881 | 5,475 | 841 | 15.4 s |
+| C (fresh seeds 1,2) | 36 | 0.917 | 6,379 | 526 | 983 | 15.3 s |
+Paired C−A on fresh seeds (n=36 task-seed pairs, bootstrap 5,000): success diff 0.000, 95% CI [−0.139, +0.139]; total tokens diff −4,502, 95% CI [−10,789, −561].
+By family (success A/C; tokens A/C): log_scan 0.50/1.00, 60,456/6,418 (C wins big: raw logs paged through context in A); join_agg 1.00/0.50, 23.7K/14.8K; chain_dm, explore, lookup, refund_cond, reminder both 1.00 with C using ~30–50% fewer tokens; log_agg C uses MORE tokens (4,467 vs 3,675: server-side aggregate_logs makes JSON trivial).
+Failures (all valid, model/design-driven):
+- A: logscan-api fails on seeds 0,1 (25-turn cap hit / no answer while paging raw logs); billsum-Acme seed 2 wrong.
+- C: topassign-cinder fails 3/3 seeds — the model spends its 3 executions printing data for inspection (exploration), then runs out before the name lookup (answers "reached the execution limit"). billsum-Fjord seed 2 wrong (summed overdue too).
+Outcome (preliminary H1 evidence, one SUT, tiny sample, thinking off): C is NOT worse than A on success (non-inferiority NOT established: CI ±14 pp is far wider than the 2 pp margin) and uses fewer tokens; the benefit concentrates on large-intermediate-result tasks. The execution cap of 3 hurts exploratory tasks — a finding about the plan's turn cap, not a bug.
+Limitations: n tiny; thinking off; seeds 1,2 used dev salt same as tuning world generator; latency measured at concurrency 4 with Hermes resident (invalid for H-latency claims; a serial pass is still needed); 4 servers/14 tools only (A pays 5.5K schema tokens/run vs ~30K+ at plan scale, so A looks relatively cheap here).
+Prompts frozen as of commit following this entry (SYS_A / SYS_C in gateway/gw.py) — nominal Phase 4 gate; note that no equal-effort tuning of A's prompt was done beyond zero iterations.
+
+## STATUS / NEXT (end of first session segment)
+Done: Phase 0 (partial: PREREG.md NOT written yet — TODO before any further results count as confirmatory), Phase 1 (Qwen + spark-s1; Gemma partial: server up, smoke test not yet run; Nemotron not loaded due to memory), Phase 2 slice, Phase 3 slice (18 tasks, no paraphrase pipeline), Phase 4 pilot (A, C on Qwen).
+Next: (1) write PREREG.md and commit; (2) Gemma smoke test; Nemotron needs memory (free RAM ~18 GB with Qwen+Gemma+spark-s1 resident; likely requires stopping mdl-gemma while it loads/runs); (3) Phase 5 mode B (spark-s1 tool selection designs) — needs more tools/distractors to be meaningful; (4) serial latency pass; (5) Phase 6 oracle gap; (6) Phase 7 D-rules; (7) Phase 8 security.
