@@ -55,17 +55,24 @@ async def main():
     ap.add_argument("--cfg", nargs="+", default=["A", "C"]); ap.add_argument("--sut", default="qwen"); ap.add_argument("--salt", default="dev")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0]); ap.add_argument("--size", default="medium"); ap.add_argument("--split", default="pilot")
     ap.add_argument("--tasks", nargs="*"); ap.add_argument("--conc", type=int, default=4); ap.add_argument("--out", required=True)
-    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
+    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--resume", action="store_true"); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
     a = ap.parse_args()
     global THETA, TAU, RULE_P
     THETA, TAU = a.theta, a.tau; _r = [int(x) for x in a.rule.split(',')]; RULE_P = dict(min_large=_r[0], fanout=_r[1], chain=_r[2])
     extra = {"chat_template_kwargs": {"enable_thinking": False}} if a.no_think else None
+    import os
+    done = set()
+    if a.resume and os.path.exists(a.out):
+        for l in open(a.out):
+            r0 = json.loads(l); done.add((r0['task_id'], r0['world_seed'], r0['config'], r0.get('n_dist', 0)))
     sem = asyncio.Semaphore(a.conc); jobs = []
     with open(a.out, "a") as out:
         for seed in a.seeds:
             ids = [t.id for t in build_suite(World(seed, a.size, a.salt)) if not a.tasks or t.id in a.tasks]
             for cfg in a.cfg:
-                for tid in ids: jobs.append(one(sem, tid, a.salt, seed, a.size, cfg, a.sut, a.split, out, extra, a.ndist))
+                for tid in ids:
+                    if (tid, seed, cfg, a.ndist) in done: continue
+                    jobs.append(one(sem, tid, a.salt, seed, a.size, cfg, a.sut, a.split, out, extra, a.ndist))
         t0 = time.time(); res = await asyncio.gather(*jobs)
     from collections import defaultdict
     agg = defaultdict(list)

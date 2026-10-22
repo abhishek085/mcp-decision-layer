@@ -184,3 +184,18 @@ Caveats (important for interpreting the gate):
 3. With 42 tools A pays 18.7K schema tokens/run; at the plan's 120-tool scale A would be much worse and the gap smaller still → conclusion is catalog-size dependent.
 4. Latency is from throttled runs; tokens dominate U (λt term ≈ 0.31 for A) — conclusions about U are mostly about tokens + success.
 ## E6.1 — Gemma A/C data collection (running)
+## E7.0 — Phase 5/7 end-to-end on Qwen (started while Gemma A/C runs; parallel runs ⇒ latency not usable, tokens/success are)
+Run 1: B/spark_a, B/oracle, D/spark_a/rules, D/oracle/rules → traces/p7_qwen_BD_spark_s012.jsonl (θ=0.002, rule params min_large=1, fanout=5, chain=99 — defaults, NOT yet tuned on dev).
+Run 2 (after Gemma finishes as SUT): B/llm, D/llm/rules, D/llm/code, D/llm/spark.
+Observation (E7.0): running Qwen B/D (conc 2) and Gemma A/C (conc 2) simultaneously cut throughput of both far below sequential (Qwen +6 runs / 110 s vs ~16 alone; Gemma +2 vs ~14 alone) — consistent with the E1.3 memory-bandwidth contention. Policy tightened: ONE SUT at a time for all runs, not just timed ones. The Qwen B/D partial run was discarded (traces/scratch_p7a_partial.jsonl) and restarted after Gemma finishes.
+
+### E6.1 results — Phase 6, Gemma-4-26B-A4B (SUT-2), A vs C, same 119 task-seed pairs (conc 8 after restart with --resume; 4 duplicate rows from the restart, last-wins in analysis)
+Trace: traces/p6_gemma_AC_s012.jsonl · analysis: traces/p6_gemma_oracle_gap.txt
+| | success | mean tokens | latency (conc 8, indicative) |
+|---|---|---|---|
+| A | 0.832 | ~15.5K | 12.6 s |
+| C | 0.664 | ~9.1K | 43.6 s |
+Primary-λ U: always-A 0.656 | always-C 0.498 | rule (LOSO) 0.734 | oracle 0.874. **Oracle gap over best fixed shape = 0.219; rule captures 36%.** Winners: C 70, A 49.
+Opposite ranking from Qwen (where C ≫ A, gap 0.051 / rule 22%): for Gemma, JSON wins on crm_update, cross3, doc_append, doc_search, conditional/fixed tasks and 3-server tasks (C's scripts fail: C U −0.62 on cross3), while C wins chain_deep (+0.97 vs −0.18), small/large-result tasks, exploratory tasks. Largest gaps: fan-out=1 (0.344), 1-server (0.361), large size (0.313).
+Outcome: the best shape depends strongly on the SUT (Qwen: C; Gemma: mixed, A on average) — this is the capability-dependent signal H5 needs; the learned-router premise (SUT descriptor as input) is supported at the pilot level. Gate (gap > 0.03 and rule < 60%): PASSES for Gemma by a wide margin, passes for Qwen narrowly. Nemotron not yet measured. Same noise caveat (oracle = max of 2 noisy runs; k=1 per cell).
+Hermes: user asked (09:34 UTC) to stop Hermes; needs root; pending the user.

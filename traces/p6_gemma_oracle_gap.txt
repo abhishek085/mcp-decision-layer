@@ -1,0 +1,129 @@
+
+## primary lambda  SUT=gemma  n=119 task-seed pairs  (lambda_t=0.01, lambda_l=0.002)
+mean U: always-A 0.656 | always-C 0.498 | rule(LOSO) 0.734 | oracle 0.874
+oracle gap over best fixed shape = 0.219; rule captures 36% of it; success A/C = 0.832/0.664
+per-task winner counts: {'C': 70, 'A': 49}
+ by fanout_bin:
+   fan1           n= 56  A=+0.514 C=+0.489 oracle=+0.858  gap=0.344
+   fan10+         n= 20  A=+0.642 C=+0.453 oracle=+0.867  gap=0.225
+   fan2-9         n= 43  A=+0.846 C=+0.531 oracle=+0.899  gap=0.053
+ by adapt:
+   conditional    n= 32  A=+0.883 C=+0.492 oracle=+0.904  gap=0.021
+   exploratory    n= 18  A=+0.288 C=+0.674 oracle=+0.876  gap=0.202
+   fixed          n= 69  A=+0.646 C=+0.455 oracle=+0.860  gap=0.214
+ by servers:
+   1              n= 62  A=+0.522 C=+0.502 oracle=+0.883  gap=0.361
+   2              n= 45  A=+0.802 C=+0.716 oracle=+0.882  gap=0.079
+   3              n= 12  A=+0.797 C=-0.337 oracle=+0.802  gap=0.006
+ by size:
+   large          n= 21  A=+0.363 C=+0.578 oracle=+0.891  gap=0.313
+   med            n= 71  A=+0.791 C=+0.325 oracle=+0.839  gap=0.047
+   small          n= 27  A=+0.526 C=+0.890 oracle=+0.953  gap=0.064
+ by family:
+   bill_sum       n=  6  A=+0.266 C=+0.349 oracle=+0.592  gap=0.243
+   cal_cond       n=  6  A=+0.848 C=+0.923 oracle=+0.923  gap=0.000
+   chain_deep     n=  9  A=-0.183 C=+0.966 oracle=+0.966  gap=0.000
+   chain_dm       n=  3  A=+0.869 C=+0.967 oracle=+0.967  gap=0.000
+   crm_update     n=  5  A=+0.901 C=+0.002 oracle=+0.901  gap=0.000
+   cross3         n=  6  A=+0.836 C=-0.622 oracle=+0.836  gap=0.000
+   doc_append     n=  6  A=+0.859 C=-0.344 oracle=+0.859  gap=0.000
+   doc_search     n=  3  A=+0.873 C=-0.313 oracle=+0.873  gap=0.000
+   explore        n=  3  A=+0.874 C=+0.952 oracle=+0.952  gap=0.000
+   explore2       n=  3  A=+0.530 C=+0.508 oracle=+0.533  gap=0.002
+   file_sum       n=  6  A=+0.116 C=+0.941 oracle=+0.941  gap=0.000
+   join_agg       n=  6  A=+0.625 C=+0.342 oracle=+0.841  gap=0.216
+   log_agg        n=  3  A=+0.940 C=+0.382 oracle=+0.957  gap=0.017
+   log_scan       n=  6  A=+0.093 C=+0.897 oracle=+0.902  gap=0.004
+   lookup         n=  3  A=+0.905 C=+0.960 oracle=+0.960  gap=0.000
+   refund_cond    n=  6  A=+0.895 C=+0.564 oracle=+0.907  gap=0.012
+   reminder       n= 18  A=+0.840 C=+0.855 oracle=+0.902  gap=0.047
+   restock        n=  6  A=+0.867 C=+0.287 oracle=+0.874  gap=0.007
+   rollback       n=  6  A=+0.905 C=+0.400 oracle=+0.913  gap=0.008
+   ticket_email   n=  6  A=+0.757 C=-0.052 oracle=+0.769  gap=0.011
+   ticket_triage  n=  3  A=+0.884 C=+0.897 oracle=+0.906  gap=0.009
+
+## tokens only (no latency)  SUT=gemma  n=119 task-seed pairs  (lambda_t=0.01, lambda_l=0.0)
+mean U: always-A 0.679 | always-C 0.579 | rule(LOSO) 0.757 | oracle 0.906
+oracle gap over best fixed shape = 0.227; rule captures 34% of it; success A/C = 0.832/0.664
+per-task winner counts: {'C': 81, 'A': 38}
+ by fanout_bin:
+   fan1           n= 56  A=+0.528 C=+0.587 oracle=+0.885  gap=0.297
+   fan10+         n= 20  A=+0.698 C=+0.516 oracle=+0.911  gap=0.213
+   fan2-9         n= 43  A=+0.867 C=+0.596 oracle=+0.930  gap=0.063
+ by adapt:
+   conditional    n= 32  A=+0.899 C=+0.554 oracle=+0.934  gap=0.035
+   exploratory    n= 18  A=+0.307 C=+0.724 oracle=+0.900  gap=0.176
+   fixed          n= 69  A=+0.674 C=+0.552 oracle=+0.894  gap=0.220
+ by servers:
+   1              n= 62  A=+0.541 C=+0.570 oracle=+0.909  gap=0.338
+   2              n= 45  A=+0.829 C=+0.779 oracle=+0.920  gap=0.091
+   3              n= 12  A=+0.834 C=-0.130 oracle=+0.839  gap=0.005
+ by size:
+   large          n= 21  A=+0.390 C=+0.673 oracle=+0.934  gap=0.261
+   med            n= 71  A=+0.815 C=+0.417 oracle=+0.873  gap=0.058
+   small          n= 27  A=+0.546 C=+0.930 oracle=+0.970  gap=0.040
+ by family:
+   bill_sum       n=  6  A=+0.271 C=+0.418 oracle=+0.611  gap=0.193
+   cal_cond       n=  6  A=+0.876 C=+0.952 oracle=+0.952  gap=0.000
+   chain_deep     n=  9  A=-0.153 C=+0.978 oracle=+0.978  gap=0.000
+   chain_dm       n=  3  A=+0.882 C=+0.979 oracle=+0.979  gap=0.000
+   crm_update     n=  5  A=+0.912 C=+0.099 oracle=+0.921  gap=0.009
+   cross3         n=  6  A=+0.849 C=-0.313 oracle=+0.849  gap=0.000
+   doc_append     n=  6  A=+0.889 C=-0.205 oracle=+0.889  gap=0.000
+   doc_search     n=  3  A=+0.880 C=-0.174 oracle=+0.880  gap=0.000
+   explore        n=  3  A=+0.884 C=+0.976 oracle=+0.976  gap=0.000
+   explore2       n=  3  A=+0.540 C=+0.607 oracle=+0.607  gap=0.000
+   file_sum       n=  6  A=+0.169 C=+0.967 oracle=+0.967  gap=0.000
+   join_agg       n=  6  A=+0.657 C=+0.534 oracle=+0.919  gap=0.262
+   log_agg        n=  3  A=+0.944 C=+0.606 oracle=+0.967  gap=0.022
+   log_scan       n=  6  A=+0.098 C=+0.941 oracle=+0.941  gap=0.000
+   lookup         n=  3  A=+0.913 C=+0.969 oracle=+0.969  gap=0.000
+   refund_cond    n=  6  A=+0.911 C=+0.604 oracle=+0.936  gap=0.025
+   reminder       n= 18  A=+0.877 C=+0.892 oracle=+0.940  gap=0.049
+   restock        n=  6  A=+0.886 C=+0.396 oracle=+0.917  gap=0.031
+   rollback       n=  6  A=+0.913 C=+0.445 oracle=+0.934  gap=0.021
+   ticket_email   n=  6  A=+0.818 C=+0.053 oracle=+0.829  gap=0.010
+   ticket_triage  n=  3  A=+0.894 C=+0.949 oracle=+0.949  gap=0.000
+
+## success only  SUT=gemma  n=119 task-seed pairs  (lambda_t=0.0, lambda_l=0.0)
+mean U: always-A 0.832 | always-C 0.664 | rule(LOSO) 0.874 | oracle 0.975
+oracle gap over best fixed shape = 0.143; rule captures 29% of it; success A/C = 0.832/0.664
+per-task winner counts: {'tie': 65, 'C': 17, 'A': 37}
+ by fanout_bin:
+   fan1           n= 56  A=+0.714 C=+0.679 oracle=+0.946  gap=0.232
+   fan10+         n= 20  A=+0.850 C=+0.600 oracle=+1.000  gap=0.150
+   fan2-9         n= 43  A=+0.977 C=+0.674 oracle=+1.000  gap=0.023
+ by adapt:
+   conditional    n= 32  A=+1.000 C=+0.625 oracle=+1.000  gap=0.000
+   exploratory    n= 18  A=+0.611 C=+0.778 oracle=+0.944  gap=0.167
+   fixed          n= 69  A=+0.812 C=+0.652 oracle=+0.971  gap=0.159
+ by servers:
+   1              n= 62  A=+0.694 C=+0.645 oracle=+0.968  gap=0.274
+   2              n= 45  A=+0.978 C=+0.844 oracle=+0.978  gap=0.000
+   3              n= 12  A=+1.000 C=+0.083 oracle=+1.000  gap=0.000
+ by size:
+   large          n= 21  A=+0.571 C=+0.762 oracle=+1.000  gap=0.238
+   med            n= 71  A=+0.930 C=+0.521 oracle=+0.958  gap=0.028
+   small          n= 27  A=+0.778 C=+0.963 oracle=+1.000  gap=0.037
+ by family:
+   bill_sum       n=  6  A=+0.333 C=+0.500 oracle=+0.667  gap=0.167
+   cal_cond       n=  6  A=+1.000 C=+1.000 oracle=+1.000  gap=0.000
+   chain_deep     n=  9  A=+0.333 C=+1.000 oracle=+1.000  gap=0.000
+   chain_dm       n=  3  A=+1.000 C=+1.000 oracle=+1.000  gap=0.000
+   crm_update     n=  5  A=+1.000 C=+0.200 oracle=+1.000  gap=0.000
+   cross3         n=  6  A=+1.000 C=+0.000 oracle=+1.000  gap=0.000
+   doc_append     n=  6  A=+1.000 C=+0.000 oracle=+1.000  gap=0.000
+   doc_search     n=  3  A=+1.000 C=+0.000 oracle=+1.000  gap=0.000
+   explore        n=  3  A=+1.000 C=+1.000 oracle=+1.000  gap=0.000
+   explore2       n=  3  A=+0.667 C=+0.667 oracle=+0.667  gap=0.000
+   file_sum       n=  6  A=+0.333 C=+1.000 oracle=+1.000  gap=0.000
+   join_agg       n=  6  A=+1.000 C=+0.667 oracle=+1.000  gap=0.000
+   log_agg        n=  3  A=+1.000 C=+0.667 oracle=+1.000  gap=0.000
+   log_scan       n=  6  A=+0.167 C=+1.000 oracle=+1.000  gap=0.000
+   lookup         n=  3  A=+1.000 C=+1.000 oracle=+1.000  gap=0.000
+   refund_cond    n=  6  A=+1.000 C=+0.667 oracle=+1.000  gap=0.000
+   reminder       n= 18  A=+1.000 C=+0.944 oracle=+1.000  gap=0.000
+   restock        n=  6  A=+1.000 C=+0.500 oracle=+1.000  gap=0.000
+   rollback       n=  6  A=+1.000 C=+0.500 oracle=+1.000  gap=0.000
+   ticket_email   n=  6  A=+1.000 C=+0.167 oracle=+1.000  gap=0.000
+   ticket_triage  n=  3  A=+1.000 C=+1.000 oracle=+1.000  gap=0.000
