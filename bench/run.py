@@ -55,10 +55,19 @@ async def main():
     ap.add_argument("--cfg", nargs="+", default=["A", "C"]); ap.add_argument("--sut", default="qwen"); ap.add_argument("--salt", default="dev")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0]); ap.add_argument("--size", default="medium"); ap.add_argument("--split", default="pilot")
     ap.add_argument("--tasks", nargs="*"); ap.add_argument("--conc", type=int, default=4); ap.add_argument("--out", required=True)
-    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--resume", action="store_true"); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
+    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--resume", action="store_true"); ap.add_argument("--oracle-from", nargs="*", default=[]); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
     a = ap.parse_args()
     global THETA, TAU, RULE_P
     THETA, TAU = a.theta, a.tau; _r = [int(x) for x in a.rule.split(',')]; RULE_P = dict(min_large=_r[0], fanout=_r[1], chain=_r[2])
+    for f in a.oracle_from:
+        cells = {}
+        for l in open(f):
+            r0 = json.loads(l)
+            if r0['config'] in ('A', 'C') and r0.get('n_dist', 0) == 0:
+                m0 = r0['metrics']; u0 = m0['success'] - 0.01 * m0.get('total_tokens', 0) / 1000 - 0.002 * m0.get('latency_s', 0)
+                cells.setdefault((r0['task_id'], r0['world_seed'], r0['sut']), {})[r0['config']] = u0
+        for k, v in cells.items():
+            if 'A' in v and 'C' in v: ORACLE[k] = 'code' if v['C'] >= v['A'] else 'json'
     extra = {"chat_template_kwargs": {"enable_thinking": False}} if a.no_think else None
     import os
     done = set()

@@ -237,3 +237,26 @@ Findings (Qwen, dev, pilot-size):
 3. Subset quality matters: the 2.4-tool Gemma-router subset reaches the same token efficiency as the gold subset (B/llm ≈ B/oracle; D/llm/code ≈ D/oracle/rules tokens) — the prompted LLM router beats spark-s1 zero-shot (E5.1) end to end too: D/llm/code 5.9K tokens vs D/spark_a/rules 14.4K.
 4. Reasoning check on spark-s1 shape: zero-shot spark-s1 shape question (D/llm/spark) gave 0.899 success, i.e. it sent many tasks to JSON where Qwen's code mode wins. Reported as the pre-training baseline for H5 ("spark-s1 before fine-tuning, zero-shot").
 Caveat: router = Gemma family; for Gemma-as-SUT runs the router would be the SUT's own family (role-separation flag) → use spark_a/oracle selectors or Nemotron router there.
+
+### E7.2 results — Gemma-4-26B-A4B (SUT-2) as the agent, B/D vs A/C; 118 matched cells across 10 configs (wall ≈ 2 h; tokens/success valid; latency not used)
+Traces: traces/p7_gemma_BD_s012.jsonl (+ traces/p6_gemma_AC_s012.jsonl) · table: traces/p7_gemma_compare.txt. Router selectors here: spark_a (spark-s1, θ=0.002) and oracle (gold). The Gemma-prompted router was NOT used (it would be the SUT's own family). Oracle SHAPE labels come from the same cells' A/C runs (in-sample, see caveat).
+| config | success | tokens | U(tok) | fallbacks/run | Δsucc vs C [CI] | ΔU(tok) vs C [CI] |
+|---|---|---|---|---|---|---|
+| A | 0.831 | 15,286 | 0.678 | – | +0.161 [+0.042,+0.280] | +0.092 [−0.049,+0.223] |
+| C | 0.669 | 8,406 | 0.585 | – | – | – |
+| B/spark_a | 0.847 | 16,687 | 0.681 | – | +0.178 | +0.095 [−0.037,+0.227] |
+| B/oracle (gold subset, JSON) | 0.856 | 5,220 | 0.804 | – | +0.186 | +0.218 [+0.095,+0.342] |
+| D/spark_a/rules | 0.839 | 16,090 | 0.678 | 0.09 | +0.169 | +0.093 [−0.026,+0.204] |
+| D/spark_a/spark (zero-shot spark-s1 shape) | 0.822 | 19,055 | 0.631 | 0.15 | +0.153 | +0.046 [−0.064,+0.158] |
+| D/spark_a/code | 0.771 | 16,744 | 0.604 | 0.19 | +0.102 [0.000,+0.203] | +0.018 |
+| D/oracle/rules | 0.703 | 5,768 | 0.646 | 0.08 | +0.034 | +0.060 |
+| D/oracle/code | 0.805 | 5,518 | 0.750 | 0.08 | +0.136 | +0.164 [+0.058,+0.274] |
+| D/oracle/oracle (gold subset + oracle shape) | **0.890** | **4,287** | **0.847** | 0.04 | **+0.220** | **+0.262 [+0.146,+0.378]** |
+Fallback causes (all configs): script_error dominates (D/spark_a/code 16, D/spark_a/spark 11, D/spark_a/rules 10, D/oracle/code 9, D/oracle/rules 8, D/oracle/oracle 4); no_clean_answer 16 total; request_more_tools ~25 (B/D spark_a).
+Findings (Gemma, dev, pilot-size):
+1. Opposite to Qwen: for Gemma plain JSON beats code mode (A 0.831 vs C 0.669); code mode alone is its worst shape. Always-code with a fallback recovers part of it (D/oracle/code 0.805) because the JSON fallback rescues failed scripts, at fallback rates of 8–19%.
+2. Tool-subset quality dominates JSON cost: gold subset cuts tokens 66% (B/oracle 5.2K vs A 15.3K) with +2.5 pp success. spark-s1 zero-shot subsets (12 tools) give no token saving (B/spark_a 16.7K ≈ A 15.3K). A perfect selector is worth +0.12 U(tok) over spark-s1's — the biggest lever found so far.
+3. Shape matters when the SUT is code-weak: with the same gold subset, shape choice moves success 0.703 (untuned rules) → 0.805 (always code) → 0.890 (oracle shape). Oracle shape vs rules = +18.7 pp success, −1.5K tokens: a large shape-error cost. Untuned default rules are WORSE than a constant for Gemma (0.703 < 0.805 always-code, and < always-JSON B/oracle 0.856), and zero-shot spark-s1 shape is no better than the rule (0.822 vs 0.839 with spark_a subset).
+4. H5 premise (learned shape > rules) therefore has room: ~19 pp success headroom on Gemma/gold-subset, but see caveat — this headroom is an in-sample upper bound.
+Caveats: (a) D/oracle/oracle uses shape labels from the same cells' single noisy A/C runs, so it is optimistic (winner's curse + label leakage into the test cell); an honest upper bound needs labels from separate repeats (k≥3) on training seeds; (b) gold tool subset is also an oracle; (c) rule thresholds not tuned on dev for Gemma; (d) one run per cell; (e) Gemma's code-mode failures are partly prompt/stub-format sensitivity (Gemma writes more buggy scripts) — equal tuning effort was not applied per SUT.
+Gate summary so far (PREREG Phase 6): Qwen gap 0.051 / rule 22%; Gemma gap 0.219 / rule 36% → gate satisfied on both; Nemotron (third SUT) outstanding.
