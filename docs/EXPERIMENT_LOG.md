@@ -108,3 +108,14 @@ Fresh seeds only (n=36 pairs): success diff C−A −0.028, 95% CI [−0.194, +0
 Per family: C better on log_scan (1.00 vs 0.33); C worse on join_agg (0.33 vs 0.83), bill_sum (0.33 vs 0.67), log_agg (0.67 vs 1.00; uses 3× tokens). 
 Failure modes: 7+ of 10 C failures involve sandbox errors (topassign-cinder: all 3 executions error in 2 of 3 seeds) — Gemma writes buggier scripts than Qwen; A's log_scan failure (0.33) happens with only ~3.4K tokens → Gemma answers from a first page of logs rather than paging all of them (premature answer, not turn-cap exhaustion as for Qwen).
 Outcome: SUT-dependent. Qwen: C ≈ A success, −41% tokens. Gemma: C slightly lower success (−5.5 pp all seeds), ~−11% tokens, much slower latency (30 s vs 11 s: sandbox retries + vLLM at 30 tok/s). Direction of the token saving is the same; magnitude and success parity are not. This is a first sign that per-SUT shape choice may matter (relevant to Phase 6 oracle gap). Not confirmatory.
+- Push works via: git -c credential.helper='!gh auth git-credential' push origin main (gh is authenticated as abhishek085). Earlier push failures were only the missing credential helper.
+
+## E2.3 — World extended to 12 servers / 42 tools (user go-ahead: "servers then the rest")
+Added servers: docs(4), calendar_email(4), crm(3), files(3), deployments(3), hr(3), inventory(4), support(4) to the original issues(5), chat(4), logs(2), billing(3) = 12 servers, 42 tools (plan target was ~120 tools; fewer executable tools, distractors supply scale). Extension entities use a separate RNG stream (`{salt}-{seed}-ext`) so the original entities for a given seed are unchanged. Snapshot hashes DO change for all seeds (state now includes the new entities) — pilot v1/v2 traces carry the old hashes.
+Org chain: first 22 users form a manager chain so chain-depth tasks of 6/12/20 are possible.
+Schema tokens for all 42 tools (A, OpenAI tool format) ≈ see E4.4.
+
+## E3.1 — Task suite v2 (tasks/templates.py + templates2.py) 
+23 new task instances over 12 families (rollback, restock, crm_update, ticket_email, chain_deep d=6/12/20, doc_search, doc_append, file_sum, cal_cond, ticket_triage, cross3, explore2). Factor coverage now: depth 1–20, fan-out 1–~36 (≈70 on size=large), size small/med/large, adaptivity fixed/conditional/exploratory, 1–3 servers.
+QA filter in build_suite (plan 6.2 step 4): drops tasks where a no-op passes (empty target set; found: crm-ent-trial seed 0, escalate-* on some seeds) and tasks the reference solver cannot complete. Result: 39–41 kept of 41 per world; solver determinism check (identical state hash on two runs) on dev seeds 0,1,2 medium and seed 0 large: FAILS 0.
+Not yet done: LLM paraphrase + cross-family verifier pass (needs Nemotron/Gemma writer; tasks currently use template phrasing only), near-duplicate filter between splits.

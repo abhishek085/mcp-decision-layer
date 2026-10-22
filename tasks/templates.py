@@ -90,10 +90,28 @@ def top_assignee_open_bugs(w, repo="beacon"):
     return Task(f"topassign-{repo}", "join_agg", ins, dict(repo=repo), lambda w2, a: any(t.lower() in a.lower() for t in tops),
                 lambda w2: tops[0], ["list_issues", "lookup_user"], dict(depth=2, fanout=1, size="large", adapt="fixed", servers=2))
 
-def build_suite(w: World):
+def build_suite_raw(w: World):
     t = [who_is_assignee(w), chain_dm(w), log_top_error_service(w), log_count_scan(w, "api"), log_count_scan(w, "worker"),
          billing_sum(w, "Acme"), billing_sum(w, "Fjord"), refund_overdue(w, "Birch"), refund_overdue(w, "Ember", 500),
          find_codeword(w), top_assignee_open_bugs(w, "beacon"), top_assignee_open_bugs(w, "cinder")]
     for n in (1, 5, 15, 30): t.append(reminder(w, n))
     t.append(reminder(w, 5, "beacon")); t.append(reminder(w, 15, "cinder"))
-    return t
+    from tasks.templates2 import build_suite2
+    return t + build_suite2(w)
+
+_CACHE = {}
+def build_suite(w: World):
+    key = (w.seed, w.size, w.salt)
+    if key in _CACHE: return _CACHE[key]
+    """QA filter (plan 6.2 step 4): keep tasks that the reference solver completes and that a no-op does NOT pass."""
+    keep = []
+    for t in build_suite_raw(w):
+        w0 = World(w.seed, w.size, w.salt)
+        if t.verify(w0, "zzz"): continue
+        w1 = World(w.seed, w.size, w.salt)
+        try:
+            if not t.verify(w1, t.solve(w1)): continue
+        except Exception: continue
+        keep.append(t)
+    _CACHE[key] = keep
+    return keep
