@@ -447,3 +447,11 @@ Qwen: A, C (hinted), D/llm/code (Gemma router; router latency included) on all t
 | D/llm/code | 0.95 | 4.2 s | 3.8 | 6.1 | 5,126 | 687 (Gemma router) | 3.5 |
 Paired Δ latency: A − C = +4.14 s [+1.62, +7.70]; D/llm/code − C = +0.45 s [−0.08, +1.24]. Tool and sandbox time are negligible (in-process mock servers); latency is LLM time. A's cost is re-reading 4–5K schema tokens each of ~11 turns (48K tokens/run); C ≈ 1.2 executions. The router adds ~0.7 s to D (offset by 0.2 s less LLM time). Caveat: mock tools respond in microseconds — real MCP servers add network latency that would favour batching in a script (C/D) even more. This was run while Hermes was stopped and nothing else was generating; one seed, 39 tasks.
 ## E9.1 — Gemma serial latency pass (A, C, D/llmq/code with Qwen router) — running
+
+### E9.1 results (Gemma) — clean serial latency, 39 tasks, dev seed 0, hinted stubs (traces/p9_latency_gemma_report.txt)
+| config | success | mean latency | median | p90 | tokens | router ms |
+|---|---|---|---|---|---|---|
+| A | 0.85 | 8.5 s | 5.7 | 22.8 | 14,938 | – |
+| C | 0.85 | 12.4 s | 6.0 | **36.3** | 3,815 | – |
+| D/llmq/code (Qwen router) | 0.90 | 10.1 s | 7.4 | 17.8 | 3,840 | 920 |
+Paired Δ latency: A − C = −3.88 s [−8.96, +0.94]; D/llmq/code − C = −2.33 s [−5.92, +0.84] (neither significant, n=39). For Gemma code mode is NOT faster than plain MCP (long tail from failed scripts + re-generation at ~30 tok/s); the decision layer trims C's tail (p90 36→18 s) despite the 0.9 s router cost. Gemma is decode-bound (vLLM, 30 tok/s) so latency comparisons across SUTs are not like-for-like (Qwen: tensorfold + MTP, 145 tok/s).

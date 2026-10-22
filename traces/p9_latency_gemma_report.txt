@@ -1,0 +1,6 @@
+config           n  succ  mean s  median    p90  tokens router ms  llm s sandbox s tool s
+A               39  0.85     8.5     5.7   22.8   14938         0    8.5       0.0    0.0
+C               39  0.85    12.4     6.0   36.3    3815         0   12.3       0.1    0.0
+D/llmq/code     39  0.90    10.1     7.4   17.8    3840       920    9.0       0.1    0.0
+latency A - C: -3.88s  95% CI [-8.96, +0.94]  n=39
+latency D/llmq/code - C: -2.33s  95% CI [-5.92, +0.84]  n=39
