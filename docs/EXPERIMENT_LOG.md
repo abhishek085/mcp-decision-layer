@@ -199,3 +199,23 @@ Primary-λ U: always-A 0.656 | always-C 0.498 | rule (LOSO) 0.734 | oracle 0.874
 Opposite ranking from Qwen (where C ≫ A, gap 0.051 / rule 22%): for Gemma, JSON wins on crm_update, cross3, doc_append, doc_search, conditional/fixed tasks and 3-server tasks (C's scripts fail: C U −0.62 on cross3), while C wins chain_deep (+0.97 vs −0.18), small/large-result tasks, exploratory tasks. Largest gaps: fan-out=1 (0.344), 1-server (0.361), large size (0.313).
 Outcome: the best shape depends strongly on the SUT (Qwen: C; Gemma: mixed, A on average) — this is the capability-dependent signal H5 needs; the learned-router premise (SUT descriptor as input) is supported at the pilot level. Gate (gap > 0.03 and rule < 60%): PASSES for Gemma by a wide margin, passes for Qwen narrowly. Nemotron not yet measured. Same noise caveat (oracle = max of 2 noisy runs; k=1 per cell).
 Hermes: user asked (09:34 UTC) to stop Hermes; needs root; pending the user.
+
+### E7.0 results — Qwen3.8-27B, spark-s1 / oracle tool selection, B and D-rules vs A and C (119 matched task-seed cells, thinking off, 12 servers/42 tools; wall 3,377 s)
+Traces: traces/p7_qwen_BD_spark_s012.jsonl + traces/p6_qwen_AC_s012.jsonl · compare: bench/compare.py → traces/p7_qwen_spark_compare.txt. Deltas vs C with paired bootstrap 95% CI (5,000 resamples). U(tok) = success − 0.01·tokens/1K (no latency; latency from these runs is not clean).
+| config | success | tokens | U(tok) | tools exposed | Δsuccess vs C | Δtokens vs C | ΔU(tok) vs C |
+|---|---|---|---|---|---|---|---|
+| A | 0.832 | 30,649 | 0.525 | 42 | −0.118 [−0.202,−0.042] | +24,471 | −0.362 [−0.565,−0.203] |
+| B/oracle (gold subset, JSON) | 0.857 | 9,718 | 0.760 | 2.1 | −0.092 [−0.168,−0.017] | +3,540 [−767,+10,694] | −0.128 [−0.248,−0.022] |
+| B/spark_a (θ=0.002) | 0.840 | 30,811 | 0.532 | 12.2 | −0.109 [−0.193,−0.034] | +24,633 | −0.356 [−0.563,−0.192] |
+| C | 0.950 | 6,178 | 0.888 | – | – | – | – |
+| D/oracle/rules | 0.916 | 5,055 | 0.865 | 2.1 | −0.034 [−0.092,+0.025] | −1,123 [−2,141,−6] | −0.022 [−0.092,+0.046] |
+| D/spark_a/rules | 0.992 | 14,433 | 0.847 | 12.2 | **+0.042 [+0.008,+0.084]** | +8,255 [+7,436,+9,201] | −0.041 [−0.070,−0.005] |
+Fallback events: B/spark_a 6 request_more_tools; D/spark_a/rules 6 request_more_tools + 2 script_error + 1 no_clean_answer (fallback rate 3%).
+Hypothesis read-outs (pilot, Qwen only, rule params untuned defaults, θ untuned beyond E5.1):
+- H1 (C vs A): supported — C +11.8 pp success (CI excl. 0), −24.5K tokens.
+- H2 (B vs A, non-inferiority): B/spark_a success +0.8 pp vs A (0.840 vs 0.832) but tokens are NOT lower (30.8K vs 30.6K): spark exposes ~12 tools and its JSON mode still pages raw results. B/oracle shows the ceiling of subset-only: −79% tokens vs A at +2.5 pp. So subset selection quality, not the idea, limits B here. Non-inferiority at the 2 pp margin cannot be claimed (n too small).
+- H3 (D vs C on U): NOT supported on tokens-U: D/spark_a/rules is better on success (+4.2 pp, CI excludes 0) but costs +8.3K tokens, so U(tok) is −0.041 [−0.070,−0.005] worse than C. D/oracle/rules is on par with C on U (−0.022, CI spans 0) with fewer tokens.
+- H4 (D vs B): D/spark_a ≫ B/spark_a (success +15 pp, tokens −16K).
+Surprise: D/oracle (gold-only 2 tools) has LOWER success (0.916) than D/spark_a (0.992) — extra exposed tools help (alternative paths, search discovery in code mode, request_more_tools); gold lists are not the best target for a router. Also the default rule sends tasks to code rarely enough to leave tokens on the table; rule params not yet tuned on dev (C-always is the strongest shape for Qwen, per E6.0).
+Caveats: single run per cell; dev seeds only; tool-selection θ and rule params untuned for the end-to-end; D/spark_a exposes ~12 tools but in C-shape the schema cost is only the stubs found by search, so extra tools cost little in code mode but a lot in JSON mode.
+## E7.1 — Gemma-router batch on Qwen (running): B/llm, D/llm/rules, D/llm/code, D/llm/spark → traces/p7_qwen_BD_llm_s012.jsonl (Gemma router + Qwen SUT active simultaneously ⇒ contention; tokens/success only).
