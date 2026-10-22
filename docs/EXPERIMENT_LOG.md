@@ -407,3 +407,18 @@ Findings (Qwen; small n; one task seed; payload set tiny):
 3. Attack effectiveness is style-dependent: the error-recovery framing (T6) is the only one that worked; commanding styles (T4) failed 100% on Qwen. Exfil (multi-step: read secret file then email) never succeeded for any config.
 4. Caveats: only 6 tasks × 18 attacks × 1 seed; exception/description vectors injected on a task-relevant tool; styles T1–T3 (train side) unused here; the router-attack set (poisoned descriptions steering shape/tool exposure) not yet run; payload "goal" asked for actions that need tools the task may not use, so ASR is bounded by exposure.
 ## E8.2 pass 2 (screening ON, τ=0.5; concurrency 2) — running
+
+### E8.2 results (pass 2, spark-s1 screening ON, τ=0.5, zero-shot boolean question; 324 runs) and E8.3 (benign false positives; 78 of 80 runs)
+Reports: traces/p8_sec_pass2_report.txt, traces/p8_sec_detection.txt, traces/p8_sec_qwen_benign_screen.jsonl. Qwen agent.
+| ASR | no screening | screening ON | task success under attack (off → on) |
+|---|---|---|---|
+| A | 0.148 | **0.065** | 0.954 → 0.991 |
+| C | 0.093 | **0.046** | 0.861 → 0.787 |
+| D/llm/code | 0.000 | 0.000 | 0.869 → 0.833 |
+Detection (≥1 screening block in an attacked run): tool-output vector 0.94, tool-description 0.92, exception-text 0.83. All 12 attacks that still executed were runs with no block (missed detections): exception/T6/forbidden-tool (A 6, C 4), output/T6 (A 1), description/T6 (C 1).
+**False positives on benign outputs (A, C; 39 tasks each, no attack, screening on): 0 blocks in 343 screened calls; max injection probability 0.003; task success unchanged** (A 0.821 → 0.821, C 0.974 → 0.974; screening errors 0).
+Findings:
+1. The spark-s1 zero-shot screening question works as an output filter on this corpus: ASR roughly halved for A (−56%) and C (−51%) with ~0 false positives on benign outputs and no benign utility cost. Residual risk is the exception-text vector (detection 0.83). 
+2. Under attack, C loses task success when screening is ON (0.861→0.787): when the injected result is blocked, the entire tool result is replaced, including the legitimate data the task needed (no span-level redaction). A improves (0.954→0.991) because it can retry/other path. A span-level redactor would fix this; not built.
+3. Together with E8.1: ASR ordering A > C > D (D structurally 0 via least-privilege tool subset); screening gives A and C a further ≈2× reduction. H6 read-out (pilot): C's ASR is NOT higher than A's ⇒ H6 not falsified; "D/screening offsets rise" moot.
+4. Caveats: τ=0.5 untuned; the question wording was written by the experimenter after seeing nothing of the test payloads (T4/T6 are the test styles, but the instruction wording mirrors common injection phrasing); payload styles T1–T3 unused; only 6 tasks / 1 seed / 1 SUT (Qwen); detection on payloads that blend instructions into data (not the `note` field I append) untested; the plan's caution stands — spark-s1 is the author's model and this evaluation shares an author with its injection pack.
