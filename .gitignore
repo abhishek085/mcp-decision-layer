@@ -1,4 +1,20 @@
+# env / caches
 .venv/
 __pycache__/
-traces/scratch_*
 *.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+# scratch + raw outputs (final traces are tracked; scratch is not)
+traces/scratch_*
+*.out
+nohup.out
+# secrets / local config
+.env
+*.key
+*.pem
+*token*
+# bulky or machine-specific
+*.safetensors
+*.gguf
+*.bin
+.claude/
