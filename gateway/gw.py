@@ -131,61 +131,89 @@ async def chat(client, model, msgs, tools=None, **kw):
                                              extra_body=kw.get("extra_body"))
     return r, int((time.time() - t0) * 1000)
 
-async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, tool_subset=None, shape=None, n_dist=0, ctx_limit=60000):
-    """cfg: 'A' or 'C' (B/D reuse these with tool_subset / shape). Returns (answer, metrics)."""
+MORE_TOOL = {"type": "function", "function": {"name": "request_more_tools", "description": "Call this if you need a tool that is not in your current tool list. Returns additional tools that become callable.", "parameters": {"type": "object", "properties": {"need": {"type": "string", "description": "what capability you need"}}, "required": ["need"]}}}
+
+async def json_phase(hub, task, client, model, exposed, m, steps, extra_body, ranking, allow_more, note="", ctx_limit=60000):
+    """JSON tool-calling loop (mode A/B and D's JSON fallback). exposed: list of tool names (mutable)."""
+    answer = ""
+    msgs = [{"role": "system", "content": SYS_A + (" If a tool you need is missing, call request_more_tools." if allow_more else "")},
+            {"role": "user", "content": task.instruction + (("\n\n" + note) if note else "")}]
+    for turn in range(25):
+        tools = [oai_tool(hub.tools[n]) for n in exposed] + ([MORE_TOOL] if allow_more else []); stok = ntok(tools)
+        m["catalog_schema_tokens"] = stok
+        if stok + 3000 > ctx_limit:
+            m["ctx_overflow"] = 1; steps.append(dict(kind="error", cause="ctx_overflow", schema_tokens=stok)); return "", False
+        r, ms = await chat(client, model, msgs, tools, extra_body=extra_body)
+        m["llm_calls"] += 1; m["tokens_in"] += r.usage.prompt_tokens; m["tokens_out"] += r.usage.completion_tokens; m["schema_tokens"] += stok
+        steps.append(dict(kind="llm", tokens_in=r.usage.prompt_tokens, tokens_out=r.usage.completion_tokens, ms=ms))
+        msg = r.choices[0].message
+        if not msg.tool_calls: return msg.content or "", True
+        msgs.append({"role": "assistant", "content": msg.content or "", "tool_calls": [tc.model_dump() for tc in msg.tool_calls]})
+        for tc in msg.tool_calls:
+            try: args = json.loads(tc.function.arguments or "{}")
+            except Exception: args = {}
+            if tc.function.name == "request_more_tools":
+                m["more_tool_requests"] = m.get("more_tool_requests", 0) + 1
+                rest = [n for n in (ranking or list(hub.tools)) if n not in exposed][:10]
+                exposed.extend(rest); res = "Added tools: " + ", ".join(rest) if rest else "No more tools available."
+                steps.append(dict(kind="fallback", cause="request_more_tools", added=rest))
+            else:
+                res = await hub.call(tc.function.name, args); m["tool_calls"] += 1
+            m["result_tokens"] += ntok(res)
+            msgs.append({"role": "tool", "tool_call_id": tc.id, "content": res})
+    return "", False
+
+async def code_phase(hub, task, client, model, names, m, steps, extra_body, max_exec=3):
+    """Code mode loop (C and D's code branch). names: tools searchable/callable in the sandbox. Returns (answer, clean) where clean=False if the last execution failed or the limit was hit without a clean run."""
+    meta = [{"type": "function", "function": {"name": "search", "description": "Search tool catalog; returns Python stubs.", "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}}},
+            {"type": "function", "function": {"name": "execute", "description": "Run a Python script in the sandbox with discovered tools as functions. Print only the final compact result.", "parameters": {"type": "object", "properties": {"code": {"type": "string"}}, "required": ["code"]}}}]
+    stok = ntok(meta); discovered = set(); last_ok = None; answer = ""; err = ""
+    msgs = [{"role": "system", "content": SYS_C}, {"role": "user", "content": task.instruction}]
+    for turn in range(10):
+        r, ms = await chat(client, model, msgs, meta, extra_body=extra_body)
+        m["llm_calls"] += 1; m["tokens_in"] += r.usage.prompt_tokens; m["tokens_out"] += r.usage.completion_tokens; m["schema_tokens"] += stok
+        steps.append(dict(kind="llm", tokens_in=r.usage.prompt_tokens, tokens_out=r.usage.completion_tokens, ms=ms))
+        msg = r.choices[0].message
+        if not msg.tool_calls: answer = msg.content or ""; break
+        msgs.append({"role": "assistant", "content": msg.content or "", "tool_calls": [tc.model_dump() for tc in msg.tool_calls]})
+        for tc in msg.tool_calls:
+            try: args = json.loads(tc.function.arguments or "{}")
+            except Exception: args = {}
+            if tc.function.name == "search":
+                q = set(re.findall(r"[a-z0-9]+", (args.get("query") or "").lower())) - STOP
+                top = search_rank(hub, names, q)[:8] if q else []; discovered.update(top)
+                res = "\n\n".join(stub(hub.tools[n]) for n in top) if q else "provide a query"
+            elif tc.function.name == "execute":
+                if m["exec_calls"] >= max_exec: res = "ERROR: execution limit reached; give your final answer."
+                else:
+                    m["exec_calls"] += 1; t1 = time.time()
+                    ok, res, nc = await run_sandbox(hub, args.get("code", ""), [n for n in names if n in discovered]); last_ok = ok
+                    if not ok: err = res[-200:]
+                    steps.append(dict(kind="sandbox", ok=ok, ms=int((time.time() - t1) * 1000), tool_calls=nc, out=res[:400], code=args.get("code", "")[:1500]))
+            else: res = "unknown tool"
+            m["result_tokens"] += ntok(res)
+            msgs.append({"role": "tool", "tool_call_id": tc.id, "content": res})
+    clean = bool(answer) and last_ok is not False and "execution limit" not in answer.lower()
+    return answer, clean, err
+
+async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, tool_subset=None, shape=None, n_dist=0, ctx_limit=60000, ranking=None, fallback=True, allow_more=None):
+    """cfg: A | B | C | D. B = JSON with a subset (+request_more_tools). D = subset + shape ('json'|'code'); code failures fall back to JSON (plan 4.4).
+    tool_subset: names exposed (None = all). ranking: retrieval order used by request_more_tools."""
     steps = steps_out; m = dict(schema_tokens=0, result_tokens=0, tokens_in=0, tokens_out=0, llm_calls=0, fallbacks=0, exec_calls=0, tool_calls=0)
-    t_start = time.time()
+    t_start = time.time(); answer = ""
     async with Hub(world, n_dist) as hub:
         names = list(hub.tools) if tool_subset is None else [n for n in hub.tools if n in tool_subset]
-        answer = ""; discovered = set()
-        if cfg in ("A", "B"):
-            tools = [oai_tool(hub.tools[n]) for n in names]; stok = ntok(tools)
-            m["catalog_schema_tokens"] = stok
-            if stok + 3000 > ctx_limit:
-                m["ctx_overflow"] = 1; steps.append(dict(kind="error", cause="ctx_overflow", schema_tokens=stok))
-                m["latency_s"] = 0.0; m["total_tokens"] = 0; return "", m
-            msgs = [{"role": "system", "content": SYS_A}, {"role": "user", "content": task.instruction}]
-            for turn in range(25):
-                r, ms = await chat(client, model, msgs, tools, extra_body=extra_body)
-                m["llm_calls"] += 1; m["tokens_in"] += r.usage.prompt_tokens; m["tokens_out"] += r.usage.completion_tokens; m["schema_tokens"] += stok
-                steps.append(dict(kind="llm", tokens_in=r.usage.prompt_tokens, tokens_out=r.usage.completion_tokens, ms=ms))
-                msg = r.choices[0].message
-                if not msg.tool_calls: answer = msg.content or ""; break
-                msgs.append({"role": "assistant", "content": msg.content or "", "tool_calls": [tc.model_dump() for tc in msg.tool_calls]})
-                for tc in msg.tool_calls:
-                    try: args = json.loads(tc.function.arguments or "{}")
-                    except Exception: args = {}
-                    res = await hub.call(tc.function.name, args)
-                    m["result_tokens"] += ntok(res); m["tool_calls"] += 1
-                    msgs.append({"role": "tool", "tool_call_id": tc.id, "content": res})
-        else:  # C / D-code
-            meta = [{"type": "function", "function": {"name": "search", "description": "Search tool catalog; returns Python stubs.", "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}}},
-                    {"type": "function", "function": {"name": "execute", "description": "Run a Python script in the sandbox with discovered tools as functions. Print only the final compact result.", "parameters": {"type": "object", "properties": {"code": {"type": "string"}}, "required": ["code"]}}}]
-            stok = ntok(meta)
-            msgs = [{"role": "system", "content": SYS_C}, {"role": "user", "content": task.instruction}]
-            for turn in range(10):
-                r, ms = await chat(client, model, msgs, meta, extra_body=extra_body)
-                m["llm_calls"] += 1; m["tokens_in"] += r.usage.prompt_tokens; m["tokens_out"] += r.usage.completion_tokens; m["schema_tokens"] += stok
-                steps.append(dict(kind="llm", tokens_in=r.usage.prompt_tokens, tokens_out=r.usage.completion_tokens, ms=ms))
-                msg = r.choices[0].message
-                if not msg.tool_calls: answer = msg.content or ""; break
-                msgs.append({"role": "assistant", "content": msg.content or "", "tool_calls": [tc.model_dump() for tc in msg.tool_calls]})
-                for tc in msg.tool_calls:
-                    try: args = json.loads(tc.function.arguments or "{}")
-                    except Exception: args = {}
-                    if tc.function.name == "search":
-                        q = set(re.findall(r"[a-z0-9]+", (args.get("query") or "").lower())) - STOP
-                        scored = search_rank(hub, names, q)
-                        top = scored[:8]; discovered.update(top); res = "\n\n".join(stub(hub.tools[n]) for n in top) if q else "provide a query"
-                    elif tc.function.name == "execute":
-                        if m["exec_calls"] >= 3: res = "ERROR: execution limit reached; give your final answer."
-                        else:
-                            m["exec_calls"] += 1; t1 = time.time()
-                            ok, res, nc = await run_sandbox(hub, args.get("code", ""), [n for n in names if n in discovered])
-                            steps.append(dict(kind="sandbox", ok=ok, ms=int((time.time() - t1) * 1000), tool_calls=nc, out=res[:400], code=args.get("code", "")[:1500]))
-                    else: res = "unknown tool"
-                    m["result_tokens"] += ntok(res)
-                    msgs.append({"role": "tool", "tool_call_id": tc.id, "content": res})
+        if allow_more is None: allow_more = cfg in ("B", "D")
+        if cfg in ("A", "B") or (cfg == "D" and shape == "json"):
+            answer, _ = await json_phase(hub, task, client, model, list(names), m, steps, extra_body, ranking, allow_more and cfg != "A", ctx_limit=ctx_limit)
+        elif cfg == "C" or (cfg == "D" and shape == "code"):
+            answer, clean, err = await code_phase(hub, task, client, model, names, m, steps, extra_body)
+            if cfg == "D" and fallback and not clean:
+                m["fallbacks"] += 1; cause = "script_error" if err else "no_clean_answer"
+                steps.append(dict(kind="fallback", cause=cause, err=err))
+                note = f"NOTE: an earlier scripted attempt did not finish cleanly ({err or 'no clean result'}). Some actions may already have been applied; check current state before repeating any side effect."
+                answer, _ = await json_phase(hub, task, client, model, list(names), m, steps, extra_body, ranking, True, note=note, ctx_limit=ctx_limit)
+        else: raise ValueError(cfg)
         steps.extend(hub.log)
         m["tool_calls_backend"] = len(hub.log); m["backend_result_tokens"] = sum(s["result_tokens"] for s in hub.log)
     m["latency_s"] = round(time.time() - t_start, 2); m["total_tokens"] = m["tokens_in"] + m["tokens_out"]

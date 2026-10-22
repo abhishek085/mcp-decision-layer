@@ -154,3 +154,11 @@ Findings (negative for the decision model as zero-shot tool selector on this tas
 3. A prompted LLM router from a different family (Gemma, same Qwen-agnostic) beats every spark-s1 design: 0.974 recall with only 2.4 tools. 
 4. Pre-registered recall threshold (≥0.95 at the smallest catalog): spark-s1 designs meet it only by exposing 12–16 tools. => per plan Phase 5 gate: "plan a tool-subset fine-tune" is indicated; for the end-to-end B/D pilots run both B-spark (design (a), θ chosen on dev for recall≥0.95) and B-llm (Gemma router).
 Caveats: single seed, tasks' wording is template-like; thresholds chosen on same data they are reported on (dev tuning, optimistic); 39 tasks → recall CI roughly ±0.15.
+
+## E4.5 — Gateway extended with modes B and D (gateway/gw.py refactor, gateway/router.py)
+json_phase / code_phase composed: B = JSON loop over a router-chosen subset + `request_more_tools` escape hatch (adds next 10 by embedding rank); D = subset + shape (json|code); code failures (sandbox error, exec limit, no clean answer) fall back to the JSON phase with a note about possible partial side effects (logged as `fallback` step with cause). Router overhead (tokens, ms) is added to total_tokens and latency. Config strings in bench/run.py: `A`, `C`, `B/<selector>`, `D/<selector>/<shape>` with selector ∈ {spark_a, llm, embed<k>, oracle, all}, shape ∈ {rules, spark, json, code, oracle}.
+Smoke (Qwen, 3 tasks): B/spark_a 2/3, D/spark_a/rules 3/3, D/llm/spark 3/3. Observation: at θ=0.002 spark_a exposes ~30 of the 30 embedding candidates (degenerate: probabilities almost never below 0.002), so it is effectively "embedding top-30" — consistent with E5.1's finding.
+Note: the 'llm' selector calls Gemma while a Qwen SUT is running → latency of those runs includes cross-model contention (E1.3); latency to be taken from the serial pass only.
+
+## E6.0 — Phase 6 data collection (running): A and C, Qwen, 39-task suite × seeds 0,1,2 (dev salt, medium), thinking off, conc 4
+traces/p6_qwen_AC_s012.jsonl

@@ -1,13 +1,17 @@
 import asyncio, json, sys, time, argparse, uuid, logging
 logging.disable(logging.INFO)
 sys.path.insert(0, ".")
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
 from worlds.world import World
 from tasks.templates import build_suite
-from gateway.gw import run_task
+from gateway.gw import run_task, Hub
+from gateway import router as R
 
 CTX = {"qwen": 250000, "gemma": 65000, "nemotron": 65000}
 SUT = {"qwen": ("http://localhost:8888/v1", "Qwen3.8-27B"), "gemma": ("http://localhost:8002/v1", "gemma"), "nemotron": ("http://localhost:8003/v1", "nemotron")}
+
+GEMMA = OpenAI(base_url='http://localhost:8002/v1', api_key='x', timeout=300)
+THETA = 0.002; TAU = 0.0; RULE_P = dict(min_large=1, fanout=5, chain=99); ORACLE = {}
 
 async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dist=0):
     async with sem:
@@ -15,7 +19,28 @@ async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dis
         task = [t for t in build_suite(w) if t.id == task_id][0]
         base, model = SUT[sut]; client = AsyncOpenAI(base_url=base, api_key="x", timeout=600)
         steps = []; err = None; ans = ""; met = {}
-        try: ans, met = await run_task(task, w, cfg, client, model, steps, extra_body=extra, n_dist=n_dist, ctx_limit=CTX[sut])
+        try:
+            base_cfg, sel_kind, shape_kind = (cfg.split("/") + [None, None])[:3]
+            subset = None; shape = None; ranking = None; rt = dict(tokens=0, ms=0)
+            if base_cfg in ("B", "D"):
+                async with Hub(w, n_dist) as hub0: cat = [dict(name=t["name"], description=t["description"], server=t["server"]) for t in hub0.tools.values()]
+                loop = asyncio.get_running_loop()
+                subset, info = await loop.run_in_executor(None, lambda: R.select_tools(sel_kind, task.instruction, cat, theta=THETA, llm_client=GEMMA, gold=task.needed_tools))
+                rt["tokens"] += info["tokens"]; rt["ms"] += info["ms"]
+                steps.append(dict(kind="router", what="tools", decision=subset, ms=info["ms"], tokens=info["tokens"]))
+                ranking = [cat[i]["name"] for i in R.embed_rank(task.instruction, cat)] if len(cat) > 1 else None
+                if base_cfg == "D":
+                    if shape_kind == "rules": shape, conf, f = R.shape_rule(task.instruction, subset, RULE_P); sinfo = dict(ms=0, features=f)
+                    elif shape_kind == "spark": shape, conf, sinfo = await loop.run_in_executor(None, lambda: R.shape_spark(task.instruction, ", ".join(subset))); rt["ms"] += sinfo["ms"]
+                    elif shape_kind in ("json", "code"): shape, conf, sinfo = shape_kind, 1.0, dict(ms=0)
+                    elif shape_kind == "oracle": shape, conf, sinfo = ORACLE.get((task_id, seed, sut), "json"), 1.0, dict(ms=0)
+                    else: raise ValueError(shape_kind)
+                    steps.append(dict(kind="router", what="shape", decision=shape, conf=conf, **sinfo))
+                    if shape_kind == "spark" and conf < TAU: shape = "json"; steps.append(dict(kind="router", what="shape_low_conf_json", tau=TAU))
+            ans, met = await run_task(task, w, base_cfg, client, model, steps, extra_body=extra, n_dist=n_dist, ctx_limit=CTX[sut], tool_subset=subset, shape=shape, ranking=ranking)
+            if rt["tokens"] or rt["ms"]:
+                met["router_tokens"] = rt["tokens"]; met["router_ms"] = rt["ms"]; met["total_tokens"] += rt["tokens"]; met["latency_s"] = round(met["latency_s"] + rt["ms"] / 1000, 2)
+            if subset is not None: met["tool_recall"] = round(len(set(subset) & set(task.needed_tools)) / len(task.needed_tools), 3); met["n_exposed"] = len(subset)
         except Exception as e: err = f"{type(e).__name__}: {str(e)[:300]}"
         ok = bool(not err and task.verify(w, ans))
         rec = dict(n_dist=n_dist, run_id=uuid.uuid4().hex[:8], task_id=task_id, family=task.family, factors=task.factors, split=split, world_seed=seed, size=size,
@@ -29,8 +54,10 @@ async def main():
     ap.add_argument("--cfg", nargs="+", default=["A", "C"]); ap.add_argument("--sut", default="qwen"); ap.add_argument("--salt", default="dev")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0]); ap.add_argument("--size", default="medium"); ap.add_argument("--split", default="pilot")
     ap.add_argument("--tasks", nargs="*"); ap.add_argument("--conc", type=int, default=4); ap.add_argument("--out", required=True)
-    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--ndist", type=int, default=0)
+    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
     a = ap.parse_args()
+    global THETA, TAU, RULE_P
+    THETA, TAU = a.theta, a.tau; _r = [int(x) for x in a.rule.split(',')]; RULE_P = dict(min_large=_r[0], fanout=_r[1], chain=_r[2])
     extra = {"chat_template_kwargs": {"enable_thinking": False}} if a.no_think else None
     sem = asyncio.Semaphore(a.conc); jobs = []
     with open(a.out, "a") as out:
