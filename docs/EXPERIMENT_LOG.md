@@ -435,3 +435,6 @@ Reading:
 2. spark-s1 shows no instruction-following steering: its rate (0.23–0.31) is close to the retrieval baseline (0.15) plus the permissive θ=0.002 (that threshold admits almost any embedded candidate, so inclusion is mostly retrieval, not steering). Slightly higher on P1 (0.31 vs 0.15): weak evidence of some steering.
 3. Implication for the security story: the "D has ASR 0" result of E8.1 assumes the tool subset is chosen honestly; with an LLM router and a poisoned catalog the least-privilege property can be defeated (attacker tool exposed). A scoring-based selector (spark-s1 style) is a safer router design than free-text LLM routing; combine with a hard allowlist for dangerous tools.
 4. Caveats: single seed, 3 poison templates, attacker tool is only exposed, not executed, here; shape-steering variant (poisoned description trying to force code/json) not run. Router attack with the 200-tool arm not run.
+
+## E9.0 — Serial latency pass (clean: concurrency 1, no other agent run active, Hermes stopped; other containers resident but idle)
+Qwen: A, C (hinted), D/llm/code (Gemma router; router latency included) on all tasks of dev seed 0 → traces/p9_latency_qwen_s0.jsonl. Gemma next: A, C, D/llmq/code (Qwen router).
