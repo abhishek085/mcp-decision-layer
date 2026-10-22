@@ -1,9 +1,10 @@
 """Gateway: modes A (plain MCP), B (decision-model subset), C (code mode), D (subset + shape). One process, switches only."""
-import asyncio, json, sys, time, os, textwrap, re, contextlib
+import asyncio, json, sys, time, os, textwrap, re, contextlib, math
 import tiktoken
 from openai import AsyncOpenAI
 from mcp.shared.memory import create_connected_server_and_client_session as conn
 from worlds.world import build_servers
+from worlds.distractors import load_distractors, make_distractor_server
 
 ENC = tiktoken.get_encoding("cl100k_base")
 def ntok(x): return len(ENC.encode(x if isinstance(x, str) else json.dumps(x)))
@@ -16,11 +17,13 @@ Write one complete script that does the whole task (loops, filtering, paging, si
 
 class Hub:
     """Connects to all MCP servers (real protocol, in-memory transport) and exposes one flat tool namespace."""
-    def __init__(self, world): self.world = world; self.tools = {}; self.sess = {}; self.log = []
+    def __init__(self, world, n_dist=0): self.world = world; self.n_dist = n_dist; self.tools = {}; self.sess = {}; self.log = []
     async def __aenter__(self):
         self._stack = contextlib.AsyncExitStack()
-        for name, srv in build_servers(self.world).items():
-            c = await self._stack.enter_async_context(conn(srv._mcp_server))
+        servers = {k: v._mcp_server for k, v in build_servers(self.world).items()}
+        if self.n_dist: servers['distractors'] = make_distractor_server(load_distractors(self.n_dist))
+        for name, srv in servers.items():
+            c = await self._stack.enter_async_context(conn(srv))
             self.sess[name] = c
             for t in (await c.list_tools()).tools:
                 self.tools[t.name] = dict(server=name, name=t.name, description=t.description or "", schema=t.inputSchema)
@@ -38,14 +41,36 @@ class Hub:
         self.log.append(dict(kind="tool", name=name, result_tokens=ntok(txt), ms=int((time.time() - t0) * 1000), ok='"error"' not in txt[:20]))
         return txt
 
+STOP = set("the a an of to for and or in on with by from is are be this that it as at all any each every get list find".split())
+_IDF = {}
+def search_rank(hub, names, q):
+    key = tuple(names)
+    if key not in _IDF:
+        docs = {n: set(re.findall(r"[a-z0-9]+", (n.replace("_", " ") + " " + hub.tools[n]["description"]).lower())) for n in names}
+        df = {}
+        for d in docs.values():
+            for w in d: df[w] = df.get(w, 0) + 1
+        _IDF[key] = (docs, {w: math.log(1 + len(names) / c) for w, c in df.items()})
+    docs, idf = _IDF[key]
+    def sc(n):
+        nm = set(re.findall(r"[a-z0-9]+", n.lower()))
+        return -sum(idf.get(w, 0) * ((3 if w in nm else 0) + (1 if w in docs[n] else 0)) for w in q)
+    return sorted(names, key=sc)
+
 def oai_tool(t): return {"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": t["schema"]}}
+
+import keyword, builtins
+def pyname(n):
+    x = re.sub(r'[^0-9a-zA-Z_]', '_', n)
+    if not x or x[0].isdigit() or keyword.iskeyword(x) or hasattr(builtins, x) or x.startswith('_'): x = 'tool_' + x.lstrip('_')
+    return x
 
 def stub(t):
     props = t["schema"].get("properties", {}); req = set(t["schema"].get("required", []))
     ty = {"string": "str", "integer": "int", "number": "float", "boolean": "bool"}
     ps = [f"{k}: {ty.get(v.get('type'), 'object')}" + ("" if k in req else (" = " + repr(v.get("default", "")))) for k, v in props.items()]
     ps.sort(key=lambda s: "=" in s)
-    return f'# already defined in the sandbox, just call it:\n{t["name"]}({", ".join(ps)}) -> dict | list   # {t["description"]}'
+    return f'# already defined in the sandbox, just call it:\n{pyname(t["name"])}({", ".join(ps)}) -> dict | list   # {t["description"]}'
 
 SANDBOX_PRELUDE = '''
 import sys, json
@@ -60,7 +85,7 @@ def sandbox_wrappers(tools):
     out = []
     for t in tools:
         order = list(t["schema"].get("properties", {}))
-        out.append(f"def {t['name']}(*a, **kw):\n    kw.update(dict(zip({order!r}, a)))\n    return _rpc({t['name']!r}, **kw)")
+        out.append(f"def {pyname(t['name'])}(*a, **kw):\n    kw.update(dict(zip({order!r}, a)))\n    return _rpc({t['name']!r}, **kw)")
     return "\n".join(out)
 
 async def run_sandbox(hub, code, names, timeout=60, max_calls=400):
@@ -69,7 +94,9 @@ async def run_sandbox(hub, code, names, timeout=60, max_calls=400):
     import resource
     def lim():
         resource.setrlimit(resource.RLIMIT_AS, (2 << 30, 2 << 30)); resource.setrlimit(resource.RLIMIT_CPU, (timeout, timeout))
-    p = await asyncio.create_subprocess_exec(sys.executable, "-I", "-c", script, stdin=asyncio.subprocess.PIPE,
+    import tempfile
+    tf = tempfile.NamedTemporaryFile("w", suffix=".py", delete=False, dir=os.environ.get("MDL_SANDBOX_TMP", None)); tf.write(script); tf.close()
+    p = await asyncio.create_subprocess_exec(sys.executable, "-I", tf.name, stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, preexec_fn=lim)
     out, calls, t0 = [], 0, time.time()
     async def loop():
@@ -93,6 +120,8 @@ async def run_sandbox(hub, code, names, timeout=60, max_calls=400):
         p.kill(); ok = False; err = "ERROR: sandbox timeout"
     se = (await p.stderr.read()).decode(errors="replace")
     if p.returncode not in (0, None) and se: ok = False; err = se.strip().splitlines()[-1][:500] if se.strip() else "nonzero exit"
+    try: os.unlink(tf.name)
+    except OSError: pass
     txt = "".join(out)[:4000]
     return ok, (txt + ("\n" + err if err else "")) or "(no output)", calls
 
@@ -102,15 +131,19 @@ async def chat(client, model, msgs, tools=None, **kw):
                                              extra_body=kw.get("extra_body"))
     return r, int((time.time() - t0) * 1000)
 
-async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, tool_subset=None, shape=None):
+async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, tool_subset=None, shape=None, n_dist=0, ctx_limit=60000):
     """cfg: 'A' or 'C' (B/D reuse these with tool_subset / shape). Returns (answer, metrics)."""
     steps = steps_out; m = dict(schema_tokens=0, result_tokens=0, tokens_in=0, tokens_out=0, llm_calls=0, fallbacks=0, exec_calls=0, tool_calls=0)
     t_start = time.time()
-    async with Hub(world) as hub:
+    async with Hub(world, n_dist) as hub:
         names = list(hub.tools) if tool_subset is None else [n for n in hub.tools if n in tool_subset]
-        answer = ""
+        answer = ""; discovered = set()
         if cfg in ("A", "B"):
             tools = [oai_tool(hub.tools[n]) for n in names]; stok = ntok(tools)
+            m["catalog_schema_tokens"] = stok
+            if stok + 3000 > ctx_limit:
+                m["ctx_overflow"] = 1; steps.append(dict(kind="error", cause="ctx_overflow", schema_tokens=stok))
+                m["latency_s"] = 0.0; m["total_tokens"] = 0; return "", m
             msgs = [{"role": "system", "content": SYS_A}, {"role": "user", "content": task.instruction}]
             for turn in range(25):
                 r, ms = await chat(client, model, msgs, tools, extra_body=extra_body)
@@ -141,14 +174,14 @@ async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, 
                     try: args = json.loads(tc.function.arguments or "{}")
                     except Exception: args = {}
                     if tc.function.name == "search":
-                        q = set(re.findall(r"\w+", (args.get("query") or "").lower()))
-                        scored = sorted(names, key=lambda n: -sum(w in (n + " " + hub.tools[n]["description"]).lower() for w in q))
-                        res = "\n\n".join(stub(hub.tools[n]) for n in scored[:8]) if q else "provide a query"
+                        q = set(re.findall(r"[a-z0-9]+", (args.get("query") or "").lower())) - STOP
+                        scored = search_rank(hub, names, q)
+                        top = scored[:8]; discovered.update(top); res = "\n\n".join(stub(hub.tools[n]) for n in top) if q else "provide a query"
                     elif tc.function.name == "execute":
                         if m["exec_calls"] >= 3: res = "ERROR: execution limit reached; give your final answer."
                         else:
                             m["exec_calls"] += 1; t1 = time.time()
-                            ok, res, nc = await run_sandbox(hub, args.get("code", ""), names)
+                            ok, res, nc = await run_sandbox(hub, args.get("code", ""), [n for n in names if n in discovered])
                             steps.append(dict(kind="sandbox", ok=ok, ms=int((time.time() - t1) * 1000), tool_calls=nc, out=res[:400], code=args.get("code", "")[:1500]))
                     else: res = "unknown tool"
                     m["result_tokens"] += ntok(res)

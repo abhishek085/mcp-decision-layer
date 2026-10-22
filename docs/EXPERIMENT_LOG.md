@@ -119,3 +119,15 @@ Schema tokens for all 42 tools (A, OpenAI tool format) ≈ see E4.4.
 23 new task instances over 12 families (rollback, restock, crm_update, ticket_email, chain_deep d=6/12/20, doc_search, doc_append, file_sum, cal_cond, ticket_triage, cross3, explore2). Factor coverage now: depth 1–20, fan-out 1–~36 (≈70 on size=large), size small/med/large, adaptivity fixed/conditional/exploratory, 1–3 servers.
 QA filter in build_suite (plan 6.2 step 4): drops tasks where a no-op passes (empty target set; found: crm-ent-trial seed 0, escalate-* on some seeds) and tasks the reference solver cannot complete. Result: 39–41 kept of 41 per world; solver determinism check (identical state hash on two runs) on dev seeds 0,1,2 medium and seed 0 large: FAILS 0.
 Not yet done: LLM paraphrase + cross-family verifier pass (needs Nemotron/Gemma writer; tasks currently use template phrasing only), near-duplicate filter between splits.
+
+## E2.4 — Distractor catalog (worlds/distractors.py) 
+Real tool definitions from huggingface.co/datasets/automatelab/mcp-servers-tool-catalog (CC-BY-4.0; 9,922 tools, 228+ source servers). Selection: seed 20251022, dedup by name, excluding our 42 names, 2,000 tools stored in worlds/distractors/catalog_2000.jsonl (nested: first N = N-tool arm). Served by a real low-level MCP server whose calls return `{"error":"unavailable..."}`. Raw parquet gitignored; attribution: automatelab, CC-BY-4.0.
+Catalog-size arms (executable 42 + distractors): 42 / 200 (158) / 2,000 (1,958). Plan said 20/200/2000; own tool count is 42 so the smallest arm is 42.
+Measured schema size in OpenAI tool format: 158 distractors = 41,550 tokens; 1,958 = 510,733 tokens. Real descriptions are far longer than the plan's estimate (200 tools ≈ 47K tokens, 2,000 ≈ 534K tokens).
+=> Mode A at 2,000 tools cannot run on any available model (Qwen ctx 262K, Gemma 65K): recorded as `ctx_overflow` failure (success 0, tokens 0) via a guard in gateway/gw.py; at 200 tools A fits Qwen only.
+
+## E4.4 — Scale probe, Qwen, 3 tasks (assignee, chain, reminder-5)
+- A @200 tools: 2/2 success on the two tasks tried, but 142–190K total tokens per task, 47,288 schema tokens PER TURN, latency 190–225 s (at conc 4 with other loads; indicative only). A @2000: ctx_overflow (533,817 schema tokens).
+- C @200 and @2000: first attempt 0/2 ALL sandbox SyntaxErrors — harness bug #3: sandbox defined wrapper functions for every tool in the catalog; real tool names contain hyphens / shadow Python builtins; script passed via `-c` also exceeded the OS arg limit at 2000 tools ("Argument list too long"). Fixes: wrappers only for tools the model discovered via search(), python-safe aliases (pyname), script via temp file, IDF-weighted search with name boosting (replaced raw substring counting).
+- After fix C @200: 3/3 success, 11.8K tokens/task; C @2000: 3/3, 9.7K tokens/task, ~17 s each.
+Outcome: scale favours C strongly (A 166K tokens @200, impossible @2000, C ≈ flat ~10K). This is H1 at scale — only on 3 tasks; to be confirmed in the scale arm.
