@@ -279,3 +279,13 @@ Diagnosis (done before accepting these numbers):
 - A: only 11 LLM calls/run but 81K tokens (re-reading 4.2K-token schema each turn) and many premature answers (e.g. replies 'u015' = the assignee id after one get_issue, skipping lookup_user); 21 empty final answers; log_scan 0/6, restock 0/6, explore2 0/6.
 - Not a serving defect: function calling 10/10 in smoke test, `reasoning` is null with enable_thinking=false. Genuine model weakness for these multi-step tasks + a stub-design weakness: my stubs declared `-> dict | list` with no output shape (a real MCP server could declare an outputSchema).
 Harness change (opt-in, baselines unchanged): `--stub-returns` adds hand-written return-shape hints for all 42 tools to code-mode stubs (gateway/gw.py RETURNS). Run as an ablation: Nemotron C with stub-returns (below). Qwen/Gemma baseline data were collected WITHOUT hints; any claim about C that mixes hinted and unhinted data must be flagged.
+
+### E6.3 results — Nemotron C with return-shape stub hints (`--stub-returns`), 119 cells (wall 618 s)
+Trace: traces/p6_nemotron_C_stubreturns_s012.jsonl (A re-used from E6.2, unchanged).
+| Nemotron | success | tokens |
+|---|---|---|
+| C, no hints (E6.2) | 0.185 | 14,220 |
+| **C, with return-shape hints** | **0.504** | **8,187** |
+| A | 0.412 | 80,936 |
+Hint effect on C: +31.9 pp success, −42% tokens, on one fixed prompt, no other change. With hints Nemotron's best shape flips from A to C: primary-λ U always-A −0.452 | always-C 0.354 | rule 0.348 | oracle 0.437; **oracle gap 0.084, rule captures −7%** (traces/p6_nemotron_hinted_oracle_gap_head.txt). Winners: C 101, A 18.
+=> The Nemotron "gap" in E6.2 (0.272) was mostly harness artifact (missing output schema); the gap shrinks to 0.084 once stubs carry return shapes. Lesson recorded: oracle-gap conclusions are sensitive to stub quality. Open: does the same hint change Gemma's picture (its C is the weakest part of the Gemma gap 0.219)? Qwen hinted C running (E6.4); Gemma hinted C and D-runs to follow after the container swap.
