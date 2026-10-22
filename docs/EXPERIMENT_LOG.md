@@ -219,3 +219,21 @@ Hypothesis read-outs (pilot, Qwen only, rule params untuned defaults, θ untuned
 Surprise: D/oracle (gold-only 2 tools) has LOWER success (0.916) than D/spark_a (0.992) — extra exposed tools help (alternative paths, search discovery in code mode, request_more_tools); gold lists are not the best target for a router. Also the default rule sends tasks to code rarely enough to leave tokens on the table; rule params not yet tuned on dev (C-always is the strongest shape for Qwen, per E6.0).
 Caveats: single run per cell; dev seeds only; tool-selection θ and rule params untuned for the end-to-end; D/spark_a exposes ~12 tools but in C-shape the schema cost is only the stubs found by search, so extra tools cost little in code mode but a lot in JSON mode.
 ## E7.1 — Gemma-router batch on Qwen (running): B/llm, D/llm/rules, D/llm/code, D/llm/spark → traces/p7_qwen_BD_llm_s012.jsonl (Gemma router + Qwen SUT active simultaneously ⇒ contention; tokens/success only).
+
+### E7.1 results — Qwen3.8-27B, Gemma-prompted router (selector "llm") and shape variants; 119 matched cells across all 10 configs (wall 2,884 s)
+Traces: traces/p7_qwen_BD_llm_s012.jsonl · full table: traces/p7_qwen_all_compare.txt. Gemma router + Qwen SUT ran simultaneously → tokens/success valid, latency not.
+| config | success | tokens | U(tok) | tools exposed | Δsucc vs C [CI] | ΔU(tok) vs C [CI] |
+|---|---|---|---|---|---|---|
+| C | 0.950 | 6,178 | 0.888 | – | – | – |
+| **D/llm/code** (Gemma subset, always code, JSON fallback) | **0.966** | 5,886 | **0.908** | 2.4 | +0.017 [−0.017,+0.050] | +0.020 [−0.019,+0.059] |
+| D/llm/rules | 0.916 | 6,020 | 0.856 | 2.4 | −0.034 [−0.101,+0.025] | −0.032 [−0.104,+0.035] |
+| D/llm/spark (zero-shot spark-s1 shape) | 0.899 | 6,254 | 0.837 | 2.4 | −0.050 [−0.118,+0.008] | −0.051 [−0.126,+0.020] |
+| B/llm | 0.857 | 10,815 | 0.749 | 2.4 | −0.092 [−0.168,−0.017] | −0.139 [−0.258,−0.033] |
+| D/spark_a/rules | 0.992 | 14,433 | 0.847 | 12.2 | +0.042 [+0.008,+0.084] | −0.041 [−0.071,−0.006] |
+(A, B/oracle, B/spark_a, D/oracle/rules as in E7.0.) Fallbacks: D/llm/code 2 no_clean_answer (1.7%); request_more_tools 3 each for B/llm, D/llm/rules, D/llm/spark.
+Findings (Qwen, dev, pilot-size):
+1. Best config on token-utility: **D/llm/code** — a small, correct tool subset + code mode + JSON fallback: success +1.7 pp, tokens −5%, U(tok) +0.020 vs C, but all CIs include 0 → NOT a significant improvement over C (H3 not established; needs the full sample).
+2. Any shape router tried (rules, zero-shot spark-s1) did WORSE than "always code" for Qwen (success 0.92/0.90 vs 0.966) — expected, since E6.0 showed C is best for Qwen on ~94% of cells; a router can only lose there. The value of a shape router must show on Gemma (E6.1 gap 0.219).
+3. Subset quality matters: the 2.4-tool Gemma-router subset reaches the same token efficiency as the gold subset (B/llm ≈ B/oracle; D/llm/code ≈ D/oracle/rules tokens) — the prompted LLM router beats spark-s1 zero-shot (E5.1) end to end too: D/llm/code 5.9K tokens vs D/spark_a/rules 14.4K.
+4. Reasoning check on spark-s1 shape: zero-shot spark-s1 shape question (D/llm/spark) gave 0.899 success, i.e. it sent many tasks to JSON where Qwen's code mode wins. Reported as the pre-training baseline for H5 ("spark-s1 before fine-tuning, zero-shot").
+Caveat: router = Gemma family; for Gemma-as-SUT runs the router would be the SUT's own family (role-separation flag) → use spark_a/oracle selectors or Nemotron router there.
