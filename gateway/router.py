@@ -29,7 +29,7 @@ def spark_bool(state, items, maxq=250):
 
 def q_tool(t): return f"Does completing this task require calling the tool '{t['name']}' ({short(t['description'])})?"
 
-def select_tools(kind, task_text, tools, theta=0.002, llm_client=None, llm_model="gemma", gold=None, k_embed=30):
+def select_tools(kind, task_text, tools, theta=0.002, llm_client=None, llm_model="gemma", gold=None, k_embed=30, llm_extra=None):
     """Returns (names, info). kinds: spark_a | llm | embed12 | oracle | all."""
     t0 = time.time(); names = [t["name"] for t in tools]; info = dict(kind=kind, tokens=0)
     if kind == "all": sel = names
@@ -44,7 +44,7 @@ def select_tools(kind, task_text, tools, theta=0.002, llm_client=None, llm_model
         rk = embed_rank(task_text, tools) if len(tools) > 60 else None
         cand = tools if rk is None else [tools[i] for i in rk[:60]]
         lst = "\n".join(f"- {t['name']}: {short(t['description'], 90)}" for t in cand)
-        r = llm_client.chat.completions.create(model=llm_model, temperature=0, max_tokens=300, messages=[{"role": "user", "content": f"Task: {task_text}\n\nAvailable tools:\n{lst}\n\nList the tools needed to complete the task (include every tool that might be needed, e.g. for lookups). Reply with a JSON array of tool names only."}])
+        r = llm_client.chat.completions.create(model=llm_model, temperature=0, max_tokens=300, extra_body=llm_extra, messages=[{"role": "user", "content": f"Task: {task_text}\n\nAvailable tools:\n{lst}\n\nList the tools needed to complete the task (include every tool that might be needed, e.g. for lookups). Reply with a JSON array of tool names only."}])
         info["tokens"] = r.usage.prompt_tokens + r.usage.completion_tokens
         try: sel = [x for x in json.loads(re.search(r"\[.*\]", r.choices[0].message.content or "", re.S).group(0)) if x in names]
         except Exception: sel = []

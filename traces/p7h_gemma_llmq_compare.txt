@@ -1,0 +1,12 @@
+SUT=gemma: 118 cells common to all 13 configs: ['A', 'B/llmq', 'B/oracle', 'B/spark_a', 'C', 'D/llmq/code', 'D/llmq/rules', 'D/oracle/code', 'D/oracle/oracle', 'D/oracle/rules', 'D/spark_a/code', 'D/spark_a/rules', 'D/spark_a/spark']
+config               success   tokens  U(tok)       U  fallb exposed | vs C: dSucc [95% CI]        dTokens [CI]            dU(tok) [CI]
+A                      0.831    15282   0.678   0.654   0.00     0.0 | -0.034 [-0.119,+0.051]    +11026 [+8439,+14015]  -0.144 [-0.246,-0.047]
+B/llmq                 0.839     7886   0.760   0.710   0.00     2.4 | -0.025 [-0.102,+0.059]     +3631 [+1283,+6420]  -0.062 [-0.160,+0.034]
+B/oracle               0.856     5216   0.804   0.776   0.00     2.1 | -0.008 [-0.085,+0.068]      +961 [-832,+2778]  -0.018 [-0.103,+0.068]
+B/spark_a              0.847    16681   0.681   0.644   0.00    12.1 | -0.017 [-0.102,+0.068]    +12426 [+10011,+15073]  -0.141 [-0.239,-0.041]
+C                      0.864     4255   0.822   0.779   0.00     0.0 | 
+D/llmq/code            0.966     3487   0.931   0.879   0.05     2.4 | +0.102 [+0.042,+0.161]      -768 [-1961,+224]  +0.109 [+0.046,+0.178]
+D/llmq/rules           0.907     4224   0.865   0.826   0.03     2.4 | +0.042 [-0.025,+0.110]       -31 [-1389,+1221]  +0.043 [-0.036,+0.121]
+D/oracle/code          0.941     2018   0.920   0.897   0.00     2.1 | +0.076 [+0.034,+0.127]     -2237 [-3351,-1314]  +0.099 [+0.048,+0.160]
+D/spark_a/rules        0.932    11063   0.822   0.778   0.00    12.2 | +0.068 [+0.017,+0.119]     +6807 [+5763,+7644]  -0.000 [-0.056,+0.062]
+fallback events: {('D/spark_a/code', 'no_clean_answer'): 12, ('B/llmq', 'request_more_tools'): 4, ('D/llmq/code', 'no_clean_answer'): 5, ('D/llmq/code', 'request_more_tools'): 5, ('D/llmq/rules', 'script_error'): 2, ('D/llmq/rules', 'request_more_tools'): 5, ('B/spark_a', 'request_more_tools'): 6, ('D/spark_a/code', 'request_more_tools'): 6, ('D/spark_a/rules', 'request_more_tools'): 6, ('D/spark_a/spark', 'no_clean_answer'): 6, ('D/spark_a/spark', 'request_more_tools'): 6, ('D/oracle/rules', 'request_more_tools'): 1, ('D/llmq/code', 'script_error'): 1, ('D/llmq/rules', 'no_clean_answer'): 1}

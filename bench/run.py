@@ -11,6 +11,7 @@ CTX = {"qwen": 250000, "gemma": 65000, "nemotron": 65000}
 SUT = {"qwen": ("http://localhost:8888/v1", "Qwen3.8-27B"), "gemma": ("http://localhost:8002/v1", "gemma"), "nemotron": ("http://localhost:8003/v1", "nemotron")}
 
 GEMMA = OpenAI(base_url='http://localhost:8002/v1', api_key='x', timeout=300)
+QWENR = OpenAI(base_url='http://localhost:8888/v1', api_key='x', timeout=300)
 RUN_TIMEOUT = 900; THETA = 0.002; TAU = 0.0; RULE_P = dict(min_large=1, fanout=5, chain=99); ORACLE = {}
 
 async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dist=0, attack=None, screen_tau=None):
@@ -32,7 +33,7 @@ async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dis
             if base_cfg in ("B", "D"):
                 async with Hub(w, n_dist) as hub0: cat = [dict(name=t["name"], description=t["description"], server=t["server"]) for t in hub0.tools.values()]
                 loop = asyncio.get_running_loop()
-                subset, info = await loop.run_in_executor(None, lambda: R.select_tools(sel_kind, task.instruction, cat, theta=THETA, llm_client=GEMMA, gold=task.needed_tools))
+                subset, info = await loop.run_in_executor(None, lambda: R.select_tools('llm' if sel_kind == 'llmq' else sel_kind, task.instruction, cat, theta=THETA, llm_client=(QWENR if sel_kind == 'llmq' else GEMMA), llm_model=('Qwen3.8-27B' if sel_kind == 'llmq' else 'gemma'), llm_extra=({'chat_template_kwargs': {'enable_thinking': False}} if sel_kind == 'llmq' else None), gold=task.needed_tools))
                 rt["tokens"] += info["tokens"]; rt["ms"] += info["ms"]
                 steps.append(dict(kind="router", what="tools", decision=subset, ms=info["ms"], tokens=info["tokens"]))
                 ranking = [cat[i]["name"] for i in R.embed_rank(task.instruction, cat)] if len(cat) > 1 else None

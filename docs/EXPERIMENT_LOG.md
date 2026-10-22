@@ -363,3 +363,27 @@ Findings (Gemma, dev, pilot-size):
 4. Zero-shot spark-s1 shape (D/spark_a/spark) is worst (ΔU −0.094): H5's pre-training baseline is poor.
 5. Fallback rate is 0 for oracle-subset configs and 5–10% for spark-s1-subset configs (no_clean_answer 12/6): bad subsets also cause more failures.
 Open: realistic (non-oracle) accurate selector for Gemma. Using Gemma as its own router would violate role separation, so the next run uses Qwen (different family, no-think) as the router: B/llmq, D/llmq/code, D/llmq/rules on Gemma.
+
+### E7.5 results — Gemma-4-26B-A4B agent with Qwen3.8-27B (no-think, different family) as the tool-subset router; hinted stubs (357 runs; 118 matched cells)
+Traces: traces/p7h_gemma_llmq_s012.jsonl · table: traces/p7h_gemma_llmq_compare.txt. Router tokens (Qwen) ARE counted in total_tokens; router latency is not (parallel run).
+| config | success | tokens (incl. router) | U(tok) | tools exposed | fallbacks/run | Δsucc vs C [95% CI] | ΔU(tok) vs C [95% CI] |
+|---|---|---|---|---|---|---|---|
+| C | 0.864 | 4,255 | 0.822 | – | – | – | – |
+| **D/llmq/code** (Qwen-selected 2.4 tools + always code + JSON fallback) | **0.966** | **3,487** | **0.931** | 2.4 | 0.05 | **+0.102 [+0.042,+0.161]** | **+0.109 [+0.046,+0.178]** |
+| D/llmq/rules | 0.907 | 4,224 | 0.865 | 2.4 | 0.03 | +0.042 [−0.025,+0.110] | +0.043 [−0.036,+0.121] |
+| B/llmq (JSON, same subset) | 0.839 | 7,886 | 0.760 | 2.4 | – | −0.025 | −0.062 [−0.160,+0.034] |
+| D/oracle/code (gold subset) | 0.941 | 2,018 | 0.920 | 2.1 | 0.00 | +0.076 | +0.099 [+0.048,+0.160] |
+| D/spark_a/rules (spark-s1 subset) | 0.932 | 11,063 | 0.822 | 12.2 | 0.00 | +0.068 | −0.000 |
+| A | 0.831 | 15,282 | 0.678 | – | – | −0.034 | −0.144 [−0.246,−0.047] |
+Findings:
+1. **H3 SUPPORTED for the code-weak SUT (Gemma), with a realistic selector**: a decision layer (small accurate subset) + code mode + JSON fallback beats code mode alone: +10.2 pp success and −18% tokens (router tokens included), ΔU(tok) +0.109, CI excludes 0. Same direction and size as the oracle-subset result (D/oracle/code +0.099), i.e. the prompted-LLM selector captures all of the oracle subset's value.
+2. **H4 SUPPORTED**: D/llmq/code beats B/llmq (+12.7 pp success, −4.4K tokens).
+3. The shape decision again adds nothing over "always code + fallback": D/llmq/rules < D/llmq/code. The value of the decision layer is the subset + fallback safety net, not shape routing. (The held-out family-router result of E6.6, +0.051 U for Gemma, was computed vs. always-code WITHOUT subset/fallback.)
+4. spark-s1 (zero-shot) as the selector does NOT deliver the gain (D/spark_a/rules ΔU 0.000): H-claims about "the decision model" need either a fine-tuned spark-s1 tool selector or an LLM selector; recall/precision of spark-s1 zero-shot tool selection is the binding gap.
+Scoreboard (hinted stubs, dev seeds, one run per cell):
+| | Qwen3.8-27B | Gemma-4-26B | Nemotron-3-Nano |
+|---|---|---|---|
+| H1 C>A (ΔU tok) | +0.405 | +0.144 | + (success 0.50 vs 0.41; tokens 8K vs 81K) |
+| H3 best D vs C (ΔU tok) | −0.009 (tie) | +0.109 [+0.046,+0.178] | not run |
+| spark-s1-selected D vs C | −0.062 | 0.000 | not run |
+Limits: Gemma router role-separation OK (Qwen router for Gemma SUT) but the Qwen-SUT runs used a Gemma router, so cross-family routing is symmetric; 118 cells, dev seeds, one run per cell, hinted stubs hand-written by the experimenter (tuned during development on dev data).
