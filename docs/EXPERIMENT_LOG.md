@@ -167,3 +167,20 @@ traces/p6_qwen_AC_s012.jsonl
 Symptom: toolsel (200-tool) run stalled; `osj-jev-vllm` showed `Up (Paused)`. Cause: the user's own `thermal_guard.sh` (running since Oct 03) does `docker pause osj-*` at ≥91 °C and unpauses below 85 °C (both GPU and SoC sensors). Sensors: SoC thermal zones read 92–93 °C while Qwen served 4 concurrent streams + spark-s1 + Gemma router calls (GPU 82–83 °C). 92–95 °C is the machine's protective-throttle/shutdown range.
 Action: I did NOT touch the guard or unpause manually. I killed my own jobs (toolsel 158 run; p6 Qwen A/C run, 15 of 234 runs done, partial file traces/p6_qwen_AC_s012.jsonl to be discarded/re-run). Idle cooldown: 93 → 64 °C within ~30 s; guard unpaused spark-s1 automatically.
 Mitigation: gateway/thermal.py self-throttle (no new run/router call while any thermal zone ≥ 86 °C); concurrency kept ≤ 3 for Qwen. Consequence: wall-clock for long runs is longer; latencies taken during hot periods are unreliable.
+
+### E6.0 results — Phase 6, Qwen3.8-27B, A vs C, 39–40 tasks × seeds 0,1,2 (n=119 task-seed pairs per config), thinking off, 12 servers/42 tools, conc 2 with thermal throttle (wall 1,584 s)
+Trace: traces/p6_qwen_AC_s012.jsonl · Analysis: bench/oracle_gap.py → traces/p6_qwen_oracle_gap.txt
+| | success | mean total tokens | schema tokens/run | latency (conc 2, thermal-throttled; indicative) |
+|---|---|---|---|---|
+| A | 0.832 | 30,649 | 18,724 | 8.6 s |
+| C | 0.950 | 6,178 | 521 | 6.5 s |
+Pre-registered utility U (λt=0.01 per 1K tokens, λl=0.002 per s): always-A 0.508, always-C 0.875, rule (text-only features, tuned leave-one-seed-out) 0.886, per-task oracle 0.926.
+**Oracle gap over best fixed shape (always-C) = 0.051** (tokens-only 0.050); the best rule captures **22%** of it. Per-task winner: C 112, A 7.
+PREREG gate check (gap > 0.03 AND rule captures < 60%): PASSES on Qwen/dev — but see caveats; Gemma (SUT-2) and Nemotron (SUT-3) not yet measured, gate is defined over all SUTs.
+Where the gap is: exploratory tasks (gap 0.169), large-result tasks (0.140), fan-out=1 tasks (0.108), 2-server tasks (0.091). By family C loses to A on doc_search (C 0.19 vs A 0.77 U), explore2 (0.49 vs 0.80), log_agg (0.61 vs 0.90 — server-side aggregate_logs makes JSON trivial), join_agg gap 0.172, bill_sum 0.158. A beats C on 7/119 pairs only. A is catastrophic on chain_deep (U −0.79: 25-turn cap / long chains), log_scan (−0.53), join_agg (−0.56), large worlds (−0.12).
+Caveats (important for interpreting the gate):
+1. Oracle = max over two noisy single runs per cell → upward-biased (winner's curse): part of the 0.051 gap is run-to-run noise, not learnable signal. Needs k≥3 repeats per cell to estimate the noise floor before training anything (plan 9.2 uses k=3).
+2. The gap is made of C's failures (a few families), not of tasks where A is better. A shape router can only add value on ≈6% of cells; "defer/fallback to JSON on C failure" (mode D) may capture most of it more cheaply than a learned router.
+3. With 42 tools A pays 18.7K schema tokens/run; at the plan's 120-tool scale A would be much worse and the gap smaller still → conclusion is catalog-size dependent.
+4. Latency is from throttled runs; tokens dominate U (λt term ≈ 0.31 for A) — conclusions about U are mostly about tokens + success.
+## E6.1 — Gemma A/C data collection (running)

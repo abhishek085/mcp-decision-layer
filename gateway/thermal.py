@@ -1,6 +1,6 @@
 """Self-throttle: pause new work while the SoC/GPU is hot (the machine's own thermal guard pauses osj-* containers at >=91C; we stay below)."""
 import glob, time, subprocess, asyncio
-LIMIT_C = 86
+LIMIT_C = 84
 def max_temp():
     m = 0
     for f in glob.glob("/sys/class/thermal/thermal_zone*/temp"):
