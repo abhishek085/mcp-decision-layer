@@ -1,0 +1,6 @@
+
+## primary lambda  SUT=nemotron  n=119 task-seed pairs  (lambda_t=0.01, lambda_l=0.002)
+mean U: always-A -0.452 | always-C -0.065 | rule(LOSO) -0.020 | oracle 0.207
+oracle gap over best fixed shape = 0.272; rule captures 17% of it; success A/C = 0.412/0.185
+per-task winner counts: {'C': 72, 'A': 47}
+ by fanout_bin:

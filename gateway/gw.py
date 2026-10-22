@@ -89,12 +89,31 @@ def pyname(n):
     if not x or x[0].isdigit() or keyword.iskeyword(x) or hasattr(builtins, x) or x.startswith('_'): x = 'tool_' + x.lstrip('_')
     return x
 
+
+STUB_RETURNS = False   # opt-in ablation: add output-shape hints to code-mode stubs (like an MCP outputSchema). Off for all baseline data.
+RETURNS = {
+ "list_issues": "{total:int, items:[{id,repo,title,state,label,assignee,description}]}", "get_issue": "{id,repo,title,state,label,assignee,description,comments:[str]}",
+ "update_issue": "{ok:bool}", "add_comment": "{ok:bool}", "search_comments": "[issue_id,...]",
+ "lookup_user": "{id,name}", "find_user_by_name": "{id,name}", "post_message": "{ok:bool}", "list_messages": "[{to,text}]",
+ "query_logs": "{total:int, items:[{ts,service,level,msg}]}", "aggregate_logs": "{<group value>: count:int, ...} (a dict, not a list)",
+ "list_invoices": "{total:int, items:[{id,customer,amount:int,status,refunded:int}]}", "get_invoice": "{id,customer,amount,status,refunded}", "issue_refund": "{ok:bool}",
+ "list_docs": "{total:int, items:[{id,title,author,tags}]}", "search_docs": "[{id,title}]", "read_doc": "{id,title,author,body,tags}", "append_doc": "{ok:bool}",
+ "list_events": "[{user,day,title}]", "create_event": "{ok:bool}", "list_emails": "[{to,subject,body}]", "send_email": "{ok:bool}",
+ "query_accounts": "{total:int, items:[{id,name,segment,stage,owner}]}", "get_account": "{id,name,segment,stage,owner}", "update_account": "{ok:bool}",
+ "list_files": "[path,...]", "read_file": "str (raw file text, NOT json)", "write_file": "{ok:bool}",
+ "list_deployments": "{total:int, items:[{id,service,env,status,version,rolled_back}]}", "get_deployment": "{id,service,env,status,version,rolled_back}", "rollback_deployment": "{ok:bool}",
+ "get_person": "{id,name,email,team,manager}", "list_team": "[{id,name}]", "get_team_lead": "{team,lead}",
+ "list_skus": "{total:int, items:[{sku,name,stock:int}]}", "stock_level": "{sku,name,stock:int}", "list_orders": "{total:int, items:[{id,sku,qty,status}]}", "restock": "{ok:bool}",
+ "list_tickets": "{total:int, items:[{id,subject,priority,status,assignee,customer}]}", "get_ticket": "{id,subject,priority,status,assignee,customer}", "triage_ticket": "{ok:bool}", "assign_ticket": "{ok:bool}",
+}
+
 def stub(t):
     props = t["schema"].get("properties", {}); req = set(t["schema"].get("required", []))
     ty = {"string": "str", "integer": "int", "number": "float", "boolean": "bool"}
     ps = [f"{k}: {ty.get(v.get('type'), 'object')}" + ("" if k in req else (" = " + repr(v.get("default", "")))) for k, v in props.items()]
     ps.sort(key=lambda s: "=" in s)
-    return f'# already defined in the sandbox, just call it:\n{pyname(t["name"])}({", ".join(ps)}) -> dict | list   # {t["description"]}'
+    rt = (" -> returns " + RETURNS[t["name"]]) if STUB_RETURNS and t["name"] in RETURNS else " -> dict | list"
+    return f'# already defined in the sandbox, just call it:\n{pyname(t["name"])}({", ".join(ps)}){rt}   # {t["description"]}'
 
 SANDBOX_PRELUDE = '''
 import sys, json

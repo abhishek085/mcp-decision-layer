@@ -61,7 +61,7 @@ async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dis
         elif screen_tau is not None:
             h = hub_out[0] if hub_out else None
             atk = dict(vector=None, screened=screen_tau, screen_blocks=sum(1 for x in (h.screen_log if h else []) if x["blocked"]), screen_calls=len(h.screen_log) if h else 0)
-        rec = dict(n_dist=n_dist, run_id=uuid.uuid4().hex[:8], task_id=task_id, family=task.family, factors=task.factors, split=split, world_seed=seed, size=size,
+        rec = dict(stub_returns=__import__('gateway.gw', fromlist=['x']).STUB_RETURNS, n_dist=n_dist, run_id=uuid.uuid4().hex[:8], task_id=task_id, family=task.family, factors=task.factors, split=split, world_seed=seed, size=size,
                    snapshot_hash=snap, config=cfg, sut=sut, temperature=0.0, steps=steps, final=dict(answer=ans[:500], state_hash=w.state_hash()),
                    metrics=dict(success=int(ok), **met), error=err, attack=atk)
         out.write(json.dumps(rec) + "\n"); out.flush()
@@ -72,7 +72,7 @@ async def main():
     ap.add_argument("--cfg", nargs="+", default=["A", "C"]); ap.add_argument("--sut", default="qwen"); ap.add_argument("--salt", default="dev")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0]); ap.add_argument("--size", default="medium"); ap.add_argument("--split", default="pilot")
     ap.add_argument("--tasks", nargs="*"); ap.add_argument("--conc", type=int, default=4); ap.add_argument("--out", required=True)
-    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--resume", action="store_true"); ap.add_argument("--oracle-from", nargs="*", default=[]); ap.add_argument("--attacks", nargs="*", default=[], help="vector:goal:style"); ap.add_argument("--screen-tau", type=float, default=None); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
+    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--resume", action="store_true"); ap.add_argument("--oracle-from", nargs="*", default=[]); ap.add_argument("--stub-returns", action="store_true"); ap.add_argument("--attacks", nargs="*", default=[], help="vector:goal:style"); ap.add_argument("--screen-tau", type=float, default=None); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
     a = ap.parse_args()
     global THETA, TAU, RULE_P
     THETA, TAU = a.theta, a.tau; _r = [int(x) for x in a.rule.split(',')]; RULE_P = dict(min_large=_r[0], fanout=_r[1], chain=_r[2])
@@ -85,6 +85,7 @@ async def main():
                 cells.setdefault((r0['task_id'], r0['world_seed'], r0['sut']), {})[r0['config']] = u0
         for k, v in cells.items():
             if 'A' in v and 'C' in v: ORACLE[k] = 'code' if v['C'] >= v['A'] else 'json'
+    import gateway.gw as _gw; _gw.STUB_RETURNS = a.stub_returns
     extra = {"chat_template_kwargs": {"enable_thinking": False}} if a.no_think else None
     import os
     done = set()

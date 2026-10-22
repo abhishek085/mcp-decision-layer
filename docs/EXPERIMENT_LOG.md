@@ -266,3 +266,16 @@ Infra note (E7.2): 1 of 952 Gemma runs (invlead-Dunmore, seed 2, D/spark_a/code)
 Function calling 10/10 (2.14 s avg), script writing OK, decode 61.0 tok/s single / 247.1 aggregate at c8, 200-tool catalog = 61,464 prompt tokens (its tokenizer is less efficient on schemas), correct pick, 11.6 s. PASS. Gemma container stopped to fit it in memory (Gemma+Nemotron+Qwen+spark-s1 do not co-reside: swap was already 11–14 GB).
 Bias flag (plan 3.3) unchanged: Nemotron is both SUT-3 and the intended test writer; Gemma stays the train-side writer and the judge for Nemotron runs only if restarted.
 ## E6.2 — Nemotron A/C data collection (running): 39–40 tasks × seeds 0,1,2, thinking flag passed, conc 6 → traces/p6_nemotron_AC_s012.jsonl
+
+### E6.2 results — Nemotron-3-Nano-30B-A3B (SUT-3), A vs C, 119 task-seed pairs (conc 6, wall 1,676 s; thinking disabled via chat_template_kwargs: verified `reasoning: null`)
+Trace: traces/p6_nemotron_AC_s012.jsonl
+| | success | mean tokens | LLM calls/run | tool calls/run |
+|---|---|---|---|---|
+| A | **0.412** | 80,936 | 11.0 | 10.2 |
+| C | **0.185** | 14,220 | 7.5 | – (exec 2.5) |
+Primary-λ U: always-A −0.452 | always-C −0.065 | rule −0.020 | oracle 0.207; oracle gap 0.272 (rule captures 17%) — but this is dominated by a very low success floor for both shapes; do not read it as router signal.
+Diagnosis (done before accepting these numbers):
+- C: 129 sandbox `TypeError: string indices must be integers` + 51 `AttributeError: 'str' object has no attribute 'get'` ⇒ the model iterates the dict returned by list tools as if it were a list of records (e.g. `sum(i['amount'] for i in list_invoices(...))` where the tool returns `{total, items:[...]}`), never inspects a result before writing the full script, and exhausts its 3 executions; 68/119 C runs end with an empty final answer. Qwen/Gemma explore or use `.get('items')` more defensively.
+- A: only 11 LLM calls/run but 81K tokens (re-reading 4.2K-token schema each turn) and many premature answers (e.g. replies 'u015' = the assignee id after one get_issue, skipping lookup_user); 21 empty final answers; log_scan 0/6, restock 0/6, explore2 0/6.
+- Not a serving defect: function calling 10/10 in smoke test, `reasoning` is null with enable_thinking=false. Genuine model weakness for these multi-step tasks + a stub-design weakness: my stubs declared `-> dict | list` with no output shape (a real MCP server could declare an outputSchema).
+Harness change (opt-in, baselines unchanged): `--stub-returns` adds hand-written return-shape hints for all 42 tools to code-mode stubs (gateway/gw.py RETURNS). Run as an ablation: Nemotron C with stub-returns (below). Qwen/Gemma baseline data were collected WITHOUT hints; any claim about C that mixes hinted and unhinted data must be flagged.
