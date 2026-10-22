@@ -303,3 +303,4 @@ Impact on prior conclusions: E7.0/E7.1 (Qwen B/D) used UNHINTED stubs; D/llm/cod
 ## E6.5 — Gemma C with hints (next; requires container swap Nemotron→Gemma)
 ## E6.6 — Held-out shape-routing test design (bench/heldout_gap.py)
 Concern: the oracle gap on seeds 0–2 is biased upward (oracle = max of two noisy single runs, labels from the same cells). Test: learn best shape per task FAMILY and per task id on seeds 0–2, apply to fresh world instances (seeds 3,4,5, dev salt), compare U vs best fixed shape with paired bootstrap. Gemma first (A and hinted C on seeds 3–5, traces/p8_gemma_AC_hinted_s345.jsonl).
+Infra note (E6.5): one Gemma hinted-C run hung and did not honour the 900 s asyncio cap (task cancellation did not unwind — process still alive at 1,117 s); process killed (SIGKILL), cell excluded (118 of 119). Analysis now uses A-only baseline files + the hinted C file so the missing cell is dropped rather than back-filled from unhinted C.
