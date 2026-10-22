@@ -45,3 +45,16 @@ gateway/gw.py: Hub (real MCP over in-memory transport), mode A (JSON calls, all 
 Dry run, thinking ON (server default): A 2/2, C 2/2. 14-catalog schema = 4,446 tokens (A) vs 512 (C meta tools). assignee task: A 18.3K tokens, C 5.5K. Latency 20–36 s per task, dominated by hidden reasoning tokens.
 Finding: Qwen thinking is controlled with extra_body chat_template_kwargs.enable_thinking=false (0.23 s vs 0.56 s on a trivial prompt). Reasoning tokens are not in the reasoning-free count, so token comparisons must state the thinking setting. Decision (pilot): thinking OFF for throughput; thinking ON on a subset later.
 Note: first no-think run still showed 3–10 s per LLM call at ~30 output tokens with 2 concurrent runs; investigating via contention test (E1.3).
+
+## E1.3 — Cross-model contention on shared memory bandwidth (bench/contention.py) — user-requested check
+| Condition | tok/s |
+|---|---|
+| Qwen alone (Gemma resident, idle) | 144.7 |
+| Gemma alone (Qwen idle) | 28.8 |
+| Qwen while Gemma serves 4 streams | 58.9 (−59%) |
+| Gemma while Qwen serves 4 streams | 14.6 (−49%) |
+Outcome: concurrent models share the GB10 memory bus and slow each other badly. An idle resident model costs nothing. **Policy:** keep all models resident, but only ONE SUT (plus the small spark-s1 router) active during any timed run. Latency numbers come from a serial pass (concurrency 1, nothing else active); success/token counts may use parallel runs. Never run two SUT arms simultaneously when latency is being measured. (Also means the Gemma-judging-Qwen offline batch must not overlap timed runs.)
+Gemma 4 26B-A4B NVFP4 in vLLM: only ~29 tok/s single stream (Qwen tensorfold gets 145 with MTP speculative decoding), so cross-SUT latency comparisons are not like-for-like in serving stack; compare within a SUT only. 
+
+## Git
+Committed locally (dc0392d). `git push` failed: no GitHub credentials on this machine (https://github.com/abhishek085/mcp-decision-layer.git). Needs the user to configure auth; commits continue locally.
