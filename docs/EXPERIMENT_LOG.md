@@ -455,3 +455,14 @@ Paired Δ latency: A − C = +4.14 s [+1.62, +7.70]; D/llm/code − C = +0.45 s 
 | C | 0.85 | 12.4 s | 6.0 | **36.3** | 3,815 | – |
 | D/llmq/code (Qwen router) | 0.90 | 10.1 s | 7.4 | 17.8 | 3,840 | 920 |
 Paired Δ latency: A − C = −3.88 s [−8.96, +0.94]; D/llmq/code − C = −2.33 s [−5.92, +0.84] (neither significant, n=39). For Gemma code mode is NOT faster than plain MCP (long tail from failed scripts + re-generation at ~30 tok/s); the decision layer trims C's tail (p90 36→18 s) despite the 0.9 s router cost. Gemma is decode-bound (vLLM, 30 tok/s) so latency comparisons across SUTs are not like-for-like (Qwen: tensorfold + MTP, 145 tok/s).
+
+# PART II — spark-s1-mcp-router (tool-selection fine-tune) — user go-ahead 2026-10-22
+User decision: build a fine-tuned spark-s1 tool router ("MCP version"); **Nemotron writes the training data, Qwen/Gemma verify it.** Rationale from Part I: the decision layer's value is a small accurate tool subset (E5.1, E7.4, E7.5); zero-shot spark-s1 needs 12–16 tools for 95% recall.
+Role separation (plan 3.2) adapted: TRAIN writer = Nemotron (swapped from Gemma); TEST/dev-paraphrase writer = Gemma; verifier of Nemotron text = Qwen (different family; Gemma as second opinion on a sample); judge n/a. Labels from code (task templates' gold tools), audited by the verifier.
+## Design (written before building)
+- Model: start from the v8 bf16 checkpoint (`Open-Spark-Jev/checkpoints/v8-4b`), LoRA r=16 SFT + Brier regulariser (recipe of configs/train/sft_v7_11.yaml), 1 epoch, plus replay rows from the existing mix to protect agent-decision skills. Output name: `spark-s1-mcp-router`.
+- Task: Boolean "is tool X needed?" per candidate; STATE now contains the task AND the candidate tool list (name + 90-char description) so the model can reason about enabling tools (the E5.1 misses: lookup_user, list_issues…). Candidates at inference = embedding top-30 (as in E5.1 design (a)).
+- Data: new training world (salt "train", disjoint seeds), parameterised task generator, gold tools from code; Nemotron paraphrases (2/task) with slot checks; Qwen verifies fidelity and audits gold tool labels; negatives = hard (embedding rank) + random tools from the UNUSED part of the real tool catalog (7,9xx tools never used as eval distractors).
+- Held-out for evaluation: whole template families (chain_deep, doc_append, cal_cond, ticket_triage, cross3) and 4 servers' tools (hr, inventory, support, deployments) never appear in training; dev set (existing template wording) + Gemma-paraphrased dev tasks; sealed test untouched.
+- Compare on the same eval: zero-shot spark-s1, prompted LLM routers, embedding top-k; then end-to-end D with Gemma/Qwen SUT.
+- Compute: stop spark-s1 vLLM during training (frees 9 GB); Qwen idle; thermal throttle stays on.
