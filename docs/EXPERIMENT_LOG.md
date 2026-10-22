@@ -341,3 +341,25 @@ Findings (Qwen; pilot-size; one run per cell; dev seeds):
 4. **H2 (B vs A)**: B/llm and B/oracle cut tokens 65–68% vs A at +2.5 pp success; B/spark_a does not (tokens equal). So a decision model can reduce plain-MCP cost IF its subset is small and accurate, but zero-shot spark-s1 is neither.
 5. **H4 (D vs B)**: D beats B (e.g. D/llm/code vs B/llm: +11 pp success, −6.2K tokens).
 Honest summary for Qwen: the paper's central claim H3 fails here because the best fixed policy (code mode with decent stubs) is already near ceiling and shape routing can only subtract. Where D could still win is the code-weak SUTs (Gemma / Nemotron), tested next.
+
+### E7.4 results — Gemma-4-26B-A4B, all code-using configs RE-RUN with return-shape stub hints (714 runs, wall 2,089 s; 118 matched cells)
+Traces: traces/p7h_gemma_D_hinted_s012.jsonl + traces/p6_gemma_C_stubreturns_s012.jsonl · table: traces/p7h_gemma_compare.txt. Oracle-shape labels for D/oracle/oracle = best of the A run and the hinted-C run for the same cell.
+| config | success | tokens | U(tok) | fallbacks/run | Δsucc vs C [95% CI] | ΔU(tok) vs C [95% CI] |
+|---|---|---|---|---|---|---|
+| C (hinted) | 0.864 | 4,255 | 0.822 | – | – | – |
+| A | 0.831 | 15,282 | 0.678 | – | −0.034 | −0.144 [−0.246,−0.047] |
+| B/oracle (gold subset, JSON) | 0.856 | 5,216 | 0.804 | – | −0.008 | −0.018 [−0.105,+0.070] |
+| B/spark_a | 0.847 | 16,681 | 0.681 | – | −0.017 | −0.141 [−0.243,−0.042] |
+| **D/oracle/code** (gold subset + code + JSON fallback) | **0.941** | **2,018** | **0.920** | 0.00 | **+0.076 [+0.034,+0.127]** | **+0.099 [+0.048,+0.160]** |
+| D/oracle/rules | 0.907 | 2,944 | 0.877 | 0.00 | +0.042 [−0.017,+0.110] | +0.055 [−0.017,+0.132] |
+| D/oracle/oracle (gold subset + oracle shape) | 0.856 | 5,653 | 0.799 | 0.00 | −0.008 | −0.022 [−0.109,+0.065] |
+| D/spark_a/rules | 0.932 | 11,063 | 0.822 | 0.00 | +0.068 [+0.017,+0.119] | −0.000 [−0.054,+0.063] |
+| D/spark_a/code | 0.907 | 12,732 | 0.779 | 0.10 | +0.042 | −0.042 [−0.096,+0.014] |
+| D/spark_a/spark | 0.881 | 15,400 | 0.727 | 0.05 | +0.017 | −0.094 [−0.184,−0.006] |
+Findings (Gemma, dev, pilot-size):
+1. **With an accurate small tool subset the decision layer + code mode beats code mode alone**: D/oracle/code +7.6 pp success, −53% tokens, ΔU +0.099 [+0.048,+0.160] (the first clearly significant D>C result). The gain comes from the SUBSET (smaller search space, fewer wasted executions, JSON fallback as safety net), not from shape routing.
+2. **spark-s1 zero-shot tool subsets (≈12 tools) forfeit the gain**: D/spark_a/rules gets the success benefit (+6.8 pp) but spends +6.8K tokens, so ΔU 0.000. The binding constraint for spark-s1 is selector precision (E5.1), consistent with plan risk "spark-s1 misses/ over-selects tools → fine-tune tool subset".
+3. **Oracle shape is NOT an upper bound**: D/oracle/oracle (0.856) < D/oracle/code (0.941). The oracle labels come from single noisy runs of each shape, so they route some cells to the wrong shape (winner's curse); with fallback, always-code was better than "oracle-routed". Reinforces the E6.6 caveat: shape labels need k≥3 repeats; the held-out family router (+0.051) remains the honest estimate of shape-routing headroom.
+4. Zero-shot spark-s1 shape (D/spark_a/spark) is worst (ΔU −0.094): H5's pre-training baseline is poor.
+5. Fallback rate is 0 for oracle-subset configs and 5–10% for spark-s1-subset configs (no_clean_answer 12/6): bad subsets also cause more failures.
+Open: realistic (non-oracle) accurate selector for Gemma. Using Gemma as its own router would violate role separation, so the next run uses Qwen (different family, no-think) as the router: B/llmq, D/llmq/code, D/llmq/rules on Gemma.
