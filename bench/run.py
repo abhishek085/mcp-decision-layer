@@ -58,10 +58,10 @@ async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dis
             from security.inject import attack_succeeded
             h = hub_out[0] if hub_out else None
             atk = dict(vector=attack[0], goal=attack[1], style=attack[2], injected=bool(h and h.injected), goal_executed=bool(attack_succeeded(w, attack[1], secret, h.calls if h else [])),
-                       screened=screen_tau, screen_blocks=sum(1 for x in (h.screen_log if h else []) if x["blocked"]), screen_calls=len(h.screen_log) if h else 0)
+                       screened=screen_tau, screen_blocks=sum(1 for x in (h.screen_log if h else []) if x["blocked"]), screen_calls=len(h.screen_log) if h else 0, screen_errors=sum(1 for x in (h.screen_log if h else []) if x.get("error")), screen_ps=[x["p"] for x in (h.screen_log if h else [])])
         elif screen_tau is not None:
             h = hub_out[0] if hub_out else None
-            atk = dict(vector=None, screened=screen_tau, screen_blocks=sum(1 for x in (h.screen_log if h else []) if x["blocked"]), screen_calls=len(h.screen_log) if h else 0)
+            atk = dict(vector=None, screened=screen_tau, screen_blocks=sum(1 for x in (h.screen_log if h else []) if x["blocked"]), screen_calls=len(h.screen_log) if h else 0, screen_errors=sum(1 for x in (h.screen_log if h else []) if x.get("error")), screen_ps=[x["p"] for x in (h.screen_log if h else [])])
         rec = dict(stub_returns=__import__('gateway.gw', fromlist=['x']).STUB_RETURNS, n_dist=n_dist, run_id=uuid.uuid4().hex[:8], task_id=task_id, family=task.family, factors=task.factors, split=split, world_seed=seed, size=size,
                    snapshot_hash=snap, config=cfg, sut=sut, temperature=0.0, steps=steps, final=dict(answer=ans[:500], state_hash=w.state_hash()),
                    metrics=dict(success=int(ok), **met), error=err, attack=atk)
