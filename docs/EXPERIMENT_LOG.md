@@ -131,3 +131,26 @@ Measured schema size in OpenAI tool format: 158 distractors = 41,550 tokens; 1,9
 - C @200 and @2000: first attempt 0/2 ALL sandbox SyntaxErrors — harness bug #3: sandbox defined wrapper functions for every tool in the catalog; real tool names contain hyphens / shadow Python builtins; script passed via `-c` also exceeded the OS arg limit at 2000 tools ("Argument list too long"). Fixes: wrappers only for tools the model discovered via search(), python-safe aliases (pyname), script via temp file, IDF-weighted search with name boosting (replaced raw substring counting).
 - After fix C @200: 3/3 success, 11.8K tokens/task; C @2000: 3/3, 9.7K tokens/task, ~17 s each.
 Outcome: scale favours C strongly (A 166K tokens @200, impossible @2000, C ≈ flat ~10K). This is H1 at scale — only on 3 tasks; to be confirmed in the scale arm.
+
+## E5.1 — Phase 5: tool-subset selection, catalog = 42 tools (bench/toolsel.py, bench/toolsel_report.py), dev seed 0, 39 tasks, offline (no SUT)
+Report: traces/toolsel_n0_report.txt · raw: traces/toolsel_dev_n0_s0.jsonl. Gold = task.needed_tools (template-declared; "enabling" tools like lookup_user are included, solutions using alternative tools would count as misses — gold noise accepted).
+Designs: (c) one boolean "does completing this task require tool X (desc)?" per tool via spark-s1 /v1/decide; (b) server-level boolean first (12 servers) then tool-level; (a) embedding (bge-small-en-v1.5 via fastembed) top-30 → spark-s1 booleans; embedding-only top-k; prompted Gemma-4-26B router (JSON list of names). Threshold θ on P(true).
+Selected rows (complete-recall = all gold tools present; n_sel = tools exposed):
+| method | complete-recall | frac-recall | n_sel | extra |
+|---|---|---|---|---|
+| (c) spark per-tool θ=0.002 | 0.949 | 0.974 | 16.2 | 14.2 |
+| (c) θ=0.01 | 0.846 | 0.923 | 8.4 | 6.5 |
+| (c) θ=0.05 | 0.590 | 0.791 | 3.7 | 2.1 |
+| (c) θ=0.3 | 0.359 | 0.641 | 1.7 | 0.3 |
+| (b) server≥0.1 then tool≥0.01 | 0.410 | 0.654 | 4.1 | 2.7 |
+| (a) embed30→spark θ=0.002 | 0.949 | 0.974 | 12.3 | 10.2 |
+| embed-only top-12 | 0.923 | 0.966 | 12 | 10 |
+| embed-only top-20 | 0.974 | 0.987 | 20 | 17.9 |
+| prompted Gemma router | 0.974 | 0.991 | 2.4 | 0.4 |
+Latency/task: spark per-tool 1.26 s (42 questions), two-stage 0.44 s (server stage only), embed→spark 0.91 s, Gemma router 0.77 s (Gemma alone on machine).
+Findings (negative for the decision model as zero-shot tool selector on this task shape):
+1. spark-s1 zero-shot is poorly calibrated for "is this tool needed?": at sensible thresholds (0.1–0.5) complete-recall is only 0.31–0.46. To reach the pre-registered recall ≥0.95 needs θ≈0.002, which exposes ~12–16 tools — no better than embedding-only top-12/20. Misses are dominated by enabling tools not named in the task: lookup_user (4), list_issues (4), list_docs, list_files...: the model scores direct relevance, not multi-step dependencies.
+2. Server-level gating (design b) is worst — it compounds errors (recall 0.41).
+3. A prompted LLM router from a different family (Gemma, same Qwen-agnostic) beats every spark-s1 design: 0.974 recall with only 2.4 tools. 
+4. Pre-registered recall threshold (≥0.95 at the smallest catalog): spark-s1 designs meet it only by exposing 12–16 tools. => per plan Phase 5 gate: "plan a tool-subset fine-tune" is indicated; for the end-to-end B/D pilots run both B-spark (design (a), θ chosen on dev for recall≥0.95) and B-llm (Gemma router).
+Caveats: single seed, tasks' wording is template-like; thresholds chosen on same data they are reported on (dev tuning, optimistic); 39 tasks → recall CI roughly ±0.15.

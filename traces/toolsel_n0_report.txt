@@ -1,0 +1,29 @@
+
+### catalog = 42 tools (39 tasks)
+method                           complete-recall frac-recall  n_sel  extra  ms/task
+(c) per-tool bool th=0.002                 0.949       0.974   16.2   14.2     1255
+(c) per-tool bool th=0.005                 0.872       0.936   11.8    9.8     1255
+(c) per-tool bool th=0.01                  0.846       0.923    8.4    6.5     1255
+(c) per-tool bool th=0.02                  0.718       0.863    6.6    4.8     1255
+(c) per-tool bool th=0.05                  0.590       0.791    3.7    2.1     1255
+(c) per-tool bool th=0.1                   0.462       0.722    2.3    0.8     1255
+(c) per-tool bool th=0.2                   0.385       0.667    1.8    0.4     1255
+(c) per-tool bool th=0.3                   0.359       0.641    1.7    0.3     1255
+(b) server>=0.1 then tool>=0.005           0.410       0.654    4.2    2.7      436
+(b) server>=0.1 then tool>=0.01            0.410       0.654    4.1    2.7      436
+(b) server>=0.1 then tool>=0.05            0.385       0.624    2.9    1.6      436
+(a) embed30->spark th=0.002                0.949       0.974   12.3   10.2      909
+(a) embed30->spark th=0.005                0.897       0.949    9.3    7.3      909
+(a) embed30->spark th=0.01                 0.872       0.936    6.8    4.8      909
+(a) embed30->spark th=0.02                 0.692       0.859    5.4    3.6      909
+(a) embed30->spark th=0.05                 0.564       0.778    3.4    1.7      909
+(a) embed30->spark th=0.1                  0.487       0.735    2.3    0.7      909
+(a) embed30->spark th=0.2                  0.359       0.654    1.7    0.4      909
+(a) embed30->spark th=0.3                  0.333       0.628    1.6    0.3      909
+embed-only top-5                           0.410       0.705    5.0    3.5        0
+embed-only top-8                           0.692       0.863    8.0    6.2        0
+embed-only top-12                          0.923       0.966   12.0   10.0        0
+embed-only top-20                          0.974       0.987   20.0   17.9        0
+embed-only top-30                          1.000       1.000   30.0   27.9        0
+prompted LLM router (Gemma)                0.974       0.991    2.4    0.4      771
+(b) server-level probs recorded; two-stage analysis in report below
