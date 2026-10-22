@@ -319,3 +319,25 @@ Family router minus best-fixed (always-C): **+0.051, 95% CI [+0.003, +0.106]**; 
 Reading: for Gemma there IS learnable, transferable signal for the shape decision (the label learned on seeds 0–2 generalises to unseen world instances), modest in size (~5 pp of U), CI lower bound barely above 0. The signal is at task-family granularity (family router = task-id router), i.e. a classifier on the task type suffices; it does not need fine per-instance features. Not tested: unseen task families (the plan's family-held-out split), unseen servers, other SUTs.
 Gate status (PREREG Phase 6; thresholds gap > 0.03 and rule captures < 60%), with hinted stubs (the fair setting): Qwen gap 0.023 / rule 8% → NOT met; Gemma 0.110 / 49% → met; Nemotron 0.084 / −7% → met. 2 of 3 SUTs meet it, with capability-dependent best shape (Qwen: C always; Gemma/Nemotron: C mostly with a tail of A-better families — cross3, bill_sum, doc tasks). Infra: 4 of 238 held-out runs hung (cancellation does not unwind) and were excluded; process killed.
 Decision note: proceed to training (Phases 9–10) is a major GPU-heavy step; evidence supports a modest gain on code-weak SUTs and none on Qwen. Left for user decision; cheaper intermediate: a per-family lookup table baseline already captures it.
+
+### E7.3 results — Qwen3.8-27B, all code-using configs RE-RUN with return-shape stub hints (595 runs, wall 2,845 s; 119 matched cells; A and B are JSON-only so reused)
+Traces: traces/p7h_qwen_D_hinted_s012.jsonl + traces/p6_qwen_C_stubreturns_s012.jsonl (C) + earlier A/B files · table: traces/p7h_qwen_compare.txt (bench/compare.py with HINTED_CODE=1 drops unhinted C/D rows).
+| config | success | tokens | U(tok) | Δsucc vs C [95% CI] | ΔU(tok) vs C [95% CI] |
+|---|---|---|---|---|---|
+| **C** (hinted) | 0.975 | **4,474** | **0.930** | – | – |
+| D/llm/code (Gemma-selected 2.4 tools, always code, JSON fallback) | 0.966 | 4,576 | 0.921 | −0.008 [−0.025,+0.000] | −0.009 [−0.032,+0.005] |
+| D/spark_a/rules (spark-s1 tools + rules) | **0.992** | 12,404 | 0.868 | +0.017 [+0.000,+0.042] | −0.062 [−0.081,−0.036] |
+| D/oracle/rules | 0.908 | 4,070 | 0.867 | −0.067 [−0.118,−0.017] | −0.063 [−0.122,−0.006] |
+| D/llm/rules | 0.908 | 5,189 | 0.856 | −0.067 [−0.118,−0.017] | −0.074 [−0.135,−0.021] |
+| D/llm/spark (zero-shot spark-s1 shape) | 0.899 | 5,626 | 0.843 | −0.076 [−0.134,−0.017] | −0.087 [−0.155,−0.025] |
+| B/oracle | 0.857 | 9,718 | 0.760 | −0.118 | −0.170 [−0.292,−0.075] |
+| B/llm | 0.857 | 10,815 | 0.749 | −0.118 | −0.181 [−0.296,−0.084] |
+| B/spark_a | 0.840 | 30,811 | 0.532 | −0.134 | −0.398 |
+| A | 0.832 | 30,649 | 0.525 | −0.143 [−0.218,−0.076] | −0.405 [−0.607,−0.252] |
+Findings (Qwen; pilot-size; one run per cell; dev seeds):
+1. **H3 (D > C on U) is NOT supported on Qwen with fair stubs**: the best decision-layer config (D/llm/code) ties C (ΔU −0.009, CI includes 0); every config with a shape decision (rules / zero-shot spark-s1 / even oracle-subset rules) is significantly WORSE than always-code (−0.06 to −0.09). The earlier "D/llm/code beats C by +0.020" (E7.1) vanished once C got the same stub quality.
+2. D/spark_a/rules reaches the highest success (0.992, +1.7 pp, CI touches 0) but costs +7.9K tokens (spark-s1 exposes ~12 tools; extra stubs/search results): not worth it on utility.
+3. **H1 (C vs A)**: strongly supported and larger with hints: ΔU(tok) −0.405 for A, success −14.3 pp.
+4. **H2 (B vs A)**: B/llm and B/oracle cut tokens 65–68% vs A at +2.5 pp success; B/spark_a does not (tokens equal). So a decision model can reduce plain-MCP cost IF its subset is small and accurate, but zero-shot spark-s1 is neither.
+5. **H4 (D vs B)**: D beats B (e.g. D/llm/code vs B/llm: +11 pp success, −6.2K tokens).
+Honest summary for Qwen: the paper's central claim H3 fails here because the best fixed policy (code mode with decent stubs) is already near ceiling and shape routing can only subtract. Where D could still win is the code-weak SUTs (Gemma / Nemotron), tested next.

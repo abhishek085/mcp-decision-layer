@@ -5,6 +5,9 @@ def U(m, ll=LL): return m["success"] - LT * m.get("total_tokens", 0) / 1000 - ll
 def main(sut, files, ref="C"):
     R = [json.loads(l) for f in files for l in open(f)]
     R = [r for r in R if r["sut"] == sut and r.get("n_dist", 0) == 0]
+    import os
+    if os.environ.get('HINTED_CODE'):   # keep only hinted rows for code-using configs (C, D/*); A and B are JSON so unaffected
+        R = [r for r in R if not (r['config'] == 'C' or r['config'].startswith('D/')) or r.get('stub_returns')]
     cell = collections.defaultdict(dict)
     for r in R: cell[(r["task_id"], r["world_seed"])][r["config"]] = r          # last wins
     cfgs = sorted({c for v in cell.values() for c in v}); common = [k for k, v in cell.items() if all(c in v for c in cfgs)]
