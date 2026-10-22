@@ -289,3 +289,15 @@ Trace: traces/p6_nemotron_C_stubreturns_s012.jsonl (A re-used from E6.2, unchang
 | A | 0.412 | 80,936 |
 Hint effect on C: +31.9 pp success, −42% tokens, on one fixed prompt, no other change. With hints Nemotron's best shape flips from A to C: primary-λ U always-A −0.452 | always-C 0.354 | rule 0.348 | oracle 0.437; **oracle gap 0.084, rule captures −7%** (traces/p6_nemotron_hinted_oracle_gap_head.txt). Winners: C 101, A 18.
 => The Nemotron "gap" in E6.2 (0.272) was mostly harness artifact (missing output schema); the gap shrinks to 0.084 once stubs carry return shapes. Lesson recorded: oracle-gap conclusions are sensitive to stub quality. Open: does the same hint change Gemma's picture (its C is the weakest part of the Gemma gap 0.219)? Qwen hinted C running (E6.4); Gemma hinted C and D-runs to follow after the container swap.
+
+### E6.4 results — Qwen C with return-shape stub hints, 119 cells (wall 553 s)
+Trace: traces/p6_qwen_C_stubreturns_s012.jsonl (A unchanged).
+| Qwen | success | tokens | execs/run |
+|---|---|---|---|
+| C, no hints (E6.0) | 0.950 | 6,178 | 1.84 |
+| C, with hints | **0.975** | **4,474** | 1.22 |
+| A | 0.832 | 30,649 | – |
+Primary-λ U: always-A 0.508 | always-C 0.918 | rule 0.920 | oracle 0.941 → **oracle gap 0.023 (< 0.03 pre-registered threshold); rule captures 8%**. Winners: C 116, A 3.
+=> For Qwen the "shape router" opportunity essentially vanishes with better stubs: always-code is within noise of the oracle. (The 0.051 gap in E6.0 was partly stub-format-related C failures + oracle-of-two-noisy-runs bias.)
+Impact on prior conclusions: E7.0/E7.1 (Qwen B/D) used UNHINTED stubs; D/llm/code etc. need a re-run under hints before any claim about D vs C on Qwen is final (expect C stronger, so the D–C difference likely shrinks further).
+## E6.5 — Gemma C with hints (next; requires container swap Nemotron→Gemma)
