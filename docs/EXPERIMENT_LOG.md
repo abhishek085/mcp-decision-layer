@@ -438,3 +438,12 @@ Reading:
 
 ## E9.0 — Serial latency pass (clean: concurrency 1, no other agent run active, Hermes stopped; other containers resident but idle)
 Qwen: A, C (hinted), D/llm/code (Gemma router; router latency included) on all tasks of dev seed 0 → traces/p9_latency_qwen_s0.jsonl. Gemma next: A, C, D/llmq/code (Qwen router).
+
+### E9.0 results (Qwen) — clean serial latency, 39 tasks, dev seed 0, hinted stubs, thinking off (bench/latency_report.py → traces/p9_latency_qwen_report.txt)
+| config | success | mean latency | median | p90 | tokens | router ms | LLM s/run |
+|---|---|---|---|---|---|---|---|
+| A | 0.82 | 7.9 s | 4.9 | 14.9 | 48,492 | – | 7.9 |
+| C | 0.97 | **3.8 s** | 3.6 | 5.7 | 4,681 | – | 3.7 |
+| D/llm/code | 0.95 | 4.2 s | 3.8 | 6.1 | 5,126 | 687 (Gemma router) | 3.5 |
+Paired Δ latency: A − C = +4.14 s [+1.62, +7.70]; D/llm/code − C = +0.45 s [−0.08, +1.24]. Tool and sandbox time are negligible (in-process mock servers); latency is LLM time. A's cost is re-reading 4–5K schema tokens each of ~11 turns (48K tokens/run); C ≈ 1.2 executions. The router adds ~0.7 s to D (offset by 0.2 s less LLM time). Caveat: mock tools respond in microseconds — real MCP servers add network latency that would favour batching in a script (C/D) even more. This was run while Hermes was stopped and nothing else was generating; one seed, 39 tasks.
+## E9.1 — Gemma serial latency pass (A, C, D/llmq/code with Qwen router) — running
