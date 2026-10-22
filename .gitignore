@@ -1,0 +1,4 @@
+.venv/
+__pycache__/
+traces/scratch_*
+*.pyc
