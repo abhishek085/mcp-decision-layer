@@ -301,3 +301,5 @@ Primary-λ U: always-A 0.508 | always-C 0.918 | rule 0.920 | oracle 0.941 → **
 => For Qwen the "shape router" opportunity essentially vanishes with better stubs: always-code is within noise of the oracle. (The 0.051 gap in E6.0 was partly stub-format-related C failures + oracle-of-two-noisy-runs bias.)
 Impact on prior conclusions: E7.0/E7.1 (Qwen B/D) used UNHINTED stubs; D/llm/code etc. need a re-run under hints before any claim about D vs C on Qwen is final (expect C stronger, so the D–C difference likely shrinks further).
 ## E6.5 — Gemma C with hints (next; requires container swap Nemotron→Gemma)
+## E6.6 — Held-out shape-routing test design (bench/heldout_gap.py)
+Concern: the oracle gap on seeds 0–2 is biased upward (oracle = max of two noisy single runs, labels from the same cells). Test: learn best shape per task FAMILY and per task id on seeds 0–2, apply to fresh world instances (seeds 3,4,5, dev salt), compare U vs best fixed shape with paired bootstrap. Gemma first (A and hinted C on seeds 3–5, traces/p8_gemma_AC_hinted_s345.jsonl).
