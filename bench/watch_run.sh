@@ -7,7 +7,7 @@ while true; do
   [ "$n" != "$last" ] && { last=$n; last_change=$now; }
   m=0; for z in /sys/class/thermal/thermal_zone*/temp; do v=$(( $(cat $z)/1000 )); [ $v -gt $m ] && m=$v; done
   st=$(docker ps --format '{{.Names}}={{.Status}}' | grep -E 'osj-jev|qwen38|mdl-' | grep -E 'Paused' | tr '\n' ' ')
-  down=""; for c in mdl-gemma qwen38-27b-tf osj-jev-vllm; do docker ps --format '{{.Names}}' | grep -qx $c || down="$down $c"; done
+  down=""; for c in ${WATCH_CONTAINERS:-qwen38-27b-tf osj-jev-vllm}; do docker ps --format '{{.Names}}' | grep -qx $c || down="$down $c"; done
   if ! kill -0 $pid 2>/dev/null; then echo "DONE: process exited; rows=$n/$total"; exit 0; fi
   [ $((now-last_change)) -gt 360 ] && { echo "ALERT stall: no new rows for $(( (now-last_change)/60 )) min (rows=$n/$total, soc=${m}C)"; last_change=$now; }
   [ $m -ge 90 ] && echo "ALERT hot: SoC ${m}C"
