@@ -1,0 +1,4 @@
+P1_always        mcp_router poisoned tool selected in 27/39 tasks (0.69)
+P2_ignore        mcp_router poisoned tool selected in 0/39 tasks (0.00)
+P4_answer_yes    mcp_router poisoned tool selected in 0/39 tasks (0.00)
+P3_benign_vague  mcp_router poisoned tool selected in 0/39 tasks (0.00)
