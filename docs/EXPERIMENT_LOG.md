@@ -641,3 +641,14 @@ Diagnosis: vLLM does cache prefixes for this hybrid model (log: "Mamba cache mod
 
 ## P3.0 — Main-experiment serial latency passes (user clarification: latency is needed in the actual A/B/C/D study, not only for the router)
 Protocol: concurrency 1, one agent model generating at a time, other containers resident but idle, Hermes stopped; hinted stubs; thinking off; seed 0 dev world (39–40 tasks); configs A, B/mcprouter, C, D/mcprouter/code (k=30, θ=0.05), D/oracle/code (ceiling, gold tool list, no router cost). Router time (embedding + 30 yes/no requests, ≈1.6–1.7 s) is INCLUDED in latency of B and D. Outputs: traces/p11_latency_<sut>_s0.jsonl. Order: Qwen → Gemma → Nemotron, then a scale arm (42/200/2,000 tools, 15 tasks: A, C, D). Mock tools answer in microseconds, so tool time is ≈0 here; real MCP servers add per-call network latency which favours script batching (C, D) — to be stated in every latency table.
+
+### P3.1 results — Clean serial latency, Qwen3.8-27B agent, 39 dev tasks (seed 0), hinted stubs, thinking off, concurrency 1, GPU at full clock with no throttle reasons during sampling (bench/latency_main.py → traces/p11_latency_qwen_report.txt)
+| config | success | tokens | latency mean / median / p90 (s) | LLM s | router s | U (λt .01/1K tok, λl .002/s) | U (λl .02/s) |
+|---|---|---|---|---|---|---|---|
+| A (plain MCP) | 0.82 | 48,492 | 8.4 / 5.0 / 15.6 | 8.3 | – | 0.319 | 0.168 |
+| B/mcprouter (fine-tuned router + JSON) | 0.85 | 17,786 | 7.4 / 5.7 / 12.7 | 5.8 | 1.5 | 0.654 | 0.520 |
+| **C (code mode)** | **0.97** | **4,681** | **3.9 / 3.7 / 5.9** | 3.8 | – | **0.920** | **0.849** |
+| D/mcprouter/code (fine-tuned router + code) | 0.95 | 7,946 | 6.1 / 4.6 / 6.8 | 4.5 | 1.5 | 0.857 | 0.747 |
+| D/oracle/code (gold tool list, router cost 0) | 0.97 | 2,893 | **3.2 / 3.0 / 4.8** | 3.1 | 0 | 0.939 | 0.882 |
+Paired vs C (95% CI): latency A +4.47 s [+1.74,+8.20]; B +3.49 s [+1.95,+5.39]; **D/mcprouter +2.22 s [+0.89,+4.60]**; **D/oracle −0.71 s [−0.98,−0.47]**. ΔU(λl=.002): A −0.60, B −0.27, D/mcprouter −0.063 [−0.149,−0.004], D/oracle +0.019 [+0.014,+0.026]. Sandbox and tool time ≈0 (in-process mock tools).
+Reading: (1) code mode is the latency winner and the plain-MCP penalty is ~4.5 s even at 42 tools; (2) a perfect, free tool subset makes D faster than C (−0.7 s, fewer exposed stubs, fewer tokens) — that is the ceiling for the decision layer on Qwen; (3) the REAL fine-tuned router costs 1.5 s (30 yes/no requests, ≈50 ms each) which exceeds that saving by ~2 s, so D is slower than C on Qwen. Break-even: the router must cost < ≈0.7 s on Qwen (or be a single-pass scorer) for D to win on latency; on the success axis D ties C. Next: Gemma and Nemotron passes, then the scale arm.
