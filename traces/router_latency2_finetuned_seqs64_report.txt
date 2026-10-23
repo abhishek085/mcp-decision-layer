@@ -1,0 +1,10 @@
+ROUTER_READY
+finetuned-bf16-vllm-seqs64     k=30 d=90 plain latency mean   1616 median   1578 p90   1711 ms | th=.01 recall 1.000 @ 2.8 tools | th=.05 recall 0.975 @ 2.6 tools (n=79)
+finetuned-bf16-vllm-seqs64     k=30 d=90 warm  latency mean   1641 median   1672 p90   1792 ms | th=.01 recall 1.000 @ 2.8 tools | th=.05 recall 0.975 @ 2.6 tools (n=79)
+finetuned-bf16-vllm-seqs64     k=20 d=90 warm  latency mean    697 median    675 p90    793 ms | th=.01 recall 0.975 @ 2.6 tools | th=.05 recall 0.924 @ 2.4 tools (n=79)
+finetuned-bf16-vllm-seqs64     k=15 d=90 warm  latency mean   1263 median   1380 p90   1413 ms | th=.01 recall 0.949 @ 2.5 tools | th=.05 recall 0.949 @ 2.3 tools (n=79)
+finetuned-bf16-vllm-seqs64     k=30 d=60 warm  latency mean   1382 median   1346 p90   1417 ms | th=.01 recall 1.000 @ 3.0 tools | th=.05 recall 1.000 @ 2.6 tools (n=79)
+finetuned-bf16-vllm-seqs64     k=20 d=60 warm  latency mean   1199 median   1127 p90   1880 ms | th=.01 recall 0.975 @ 2.8 tools | th=.05 recall 0.975 @ 2.5 tools (n=79)
+finetuned-bf16-vllm-seqs64     k=15 d=60 warm  latency mean   1286 median   1340 p90   1372 ms | th=.01 recall 0.975 @ 2.6 tools | th=.05 recall 0.975 @ 2.5 tools (n=79)
+
+[exited with code 0]
