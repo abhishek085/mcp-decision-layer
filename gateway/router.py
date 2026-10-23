@@ -4,7 +4,8 @@ import httpx, numpy as np
 from openai import OpenAI
 
 SPARK = "http://localhost:8400/v1/decide"
-ROUTER_URL = "http://localhost:8401/v1/decide"
+import os
+ROUTER_URL = os.environ.get("MDL_ROUTER_URL", "http://localhost:8401/v1/decide")
 _emb = None; _cache = {}
 def short(d, n=160): return re.sub(r"\s+", " ", d)[:n]
 

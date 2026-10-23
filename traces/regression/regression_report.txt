@@ -1,0 +1,23 @@
+REG_DONE
+=== v8
+## reg-v8-bf16
+
+T (fit on calibration): {'choice': 2.255, 'score': 1.192, 'noul': 1.495}; abstain threshold: 0.656793548315291
+
+| split | acc | acc (mean of perms) | option flips | NLL raw->cal | ECE raw->cal | Brier raw->cal | selective (cov / acc) |
+|---|---|---|---|---|---|---|---|
+| calibration | 0.923 | 0.923 | 0.0 | 0.32->0.23 | 0.039->0.004 | 0.120->0.117 | 0.9285 / 0.9503 |
+| test_locked | 0.928 | 0.928 | 0.0 | 0.31->0.23 | 0.032->0.013 | 0.114->0.113 | 0.9281 / 0.9548 |
+| challenge | 0.902 | 0.902 | 0.0 | 0.36->0.28 | 0.052->0.013 | 0.153->0.145 | 0.9095 / 0.937 |
+=== router_v3
+## reg-router-v3
+
+T (fit on calibration): {'choice': 2.17, 'score': 1.503, 'noul': 1.774}; abstain threshold: 0.6845814027307028
+
+| split | acc | acc (mean of perms) | option flips | NLL raw->cal | ECE raw->cal | Brier raw->cal | selective (cov / acc) |
+|---|---|---|---|---|---|---|---|
+| calibration | 0.907 | 0.907 | 0.0 | 0.36->0.27 | 0.046->0.008 | 0.143->0.138 | 0.8925 / 0.95 |
+| test_locked | 0.900 | 0.900 | 0.0 | 0.37->0.28 | 0.052->0.003 | 0.153->0.145 | 0.8846 / 0.9444 |
+| challenge | 0.887 | 0.887 | 0.0 | 0.41->0.31 | 0.061->0.014 | 0.178->0.166 | 0.8632 / 0.9379 |
+
+[exited with code 0]

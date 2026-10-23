@@ -604,3 +604,12 @@ Release name: **spark-s1-mcp-router-4b-r1** (directory training/ckpt/spark-s1-mc
 
 ## P2.13 — GGUF build (user request: GGUF instead of NVFP4; test everything, only then push)
 Converted training/ckpt/spark-s1-mcp-router-4b-r1 (Qwen3_5ForCausalLM, bf16) with the local llama.cpp (commit 38a5b42, convert_hf_to_gguf.py, gguf-py from the same tree): BF16 (8.4 GB, 426 tensors), then llama-quantize → Q8_0 and Q4_K_M (sizes below). Next: serve each with llama-server (CUDA build) behind the open_spark_jev gateway (--openai-mode completions), compare per-candidate probabilities and recall against the bf16 safetensors reference, measure latency, run the regression check, the poisoned-description router test, then assemble licences/NOTICE/model card. HF upload is blocked until the user logs in (no HF token on the machine) and all tests pass; datasets (training records excluding the replay rows, eval tasks/paraphrases, traces) are staged for the same upload.
+
+## P2.14 — Regression check on the base model's general skills (Open-Spark-Jev eval.osdg, v5 benchmark splits, 1 permutation, in-process bf16; logs traces/regression/)
+| split | spark-s1 v8 bf16 (baseline) | spark-s1-mcp-router-4b-r1 | Δ |
+|---|---|---|---|
+| calibration (accuracy) | 0.923 | 0.907 | −1.6 pt |
+| test_locked | 0.928 | 0.900 | −2.8 pt |
+| challenge | 0.902 | 0.887 | −1.5 pt |
+Calibrated Brier (test_locked) 0.113 → 0.145; calibrated ECE 0.013 → 0.003 (better); selective accuracy at the fitted abstain threshold 0.955 → 0.944 at lower coverage (0.928 → 0.885). Re-fitted temperatures on these splits: v8 {choice 2.255, score 1.192, noul 1.495} vs router {choice 2.17, score 1.503, noul 1.774}.
+Reading: the task-specific fine-tune costs 1.5–2.8 accuracy points on the base model's general decision benchmark (only 800 replay rows = 14% of the mix; 1 epoch, lr 5e-5). It is NOT a drop-in replacement for spark-s1 on general decisions and the model card must say so. A weight-average with v8 (as v8 itself was built) would likely recover most of it but was not built/tested. Not run: JevBench public tiers, injection sets, tool-call-risk holdout (only the osdg splits).
