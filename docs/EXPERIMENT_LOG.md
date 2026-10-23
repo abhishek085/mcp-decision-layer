@@ -580,3 +580,21 @@ Status when asked: NOT yet measured cleanly. `router_ms` in the agent traces was
 | B/mcprouter | 0.840 | 12,183 | 0.719 | −0.134 | −0.212 |
 | A | 0.832 | 30,649 | 0.525 | −0.143 | −0.405 |
 Same conclusion as E7.3 for the strong-code-mode SUT: nothing beats plain code mode on utility for Qwen; the fine-tuned router is on par with the prompted Gemma router and does not hurt success (0.966 vs 0.975, CI includes 0) but adds ~1.8K tokens (router, prefix-cached accounting) → ΔU(tok) −0.027 n.s. The router helps agents whose own code mode is weak (Gemma), not Qwen.
+
+### P2.11 results — Router latency, clean and serial (bench/router_latency.py: 40 tasks, 42 tools; bench/router_latency_scale.py: 15 tasks at 200 and 2,000 tools; nothing else generating; reports traces/router_latency_report.txt, traces/router_latency_scale_report.txt)
+42 tools (mean / median / p90 ms):
+| selection step | mean | median | p90 |
+|---|---|---|---|
+| embedding retrieval only (CPU, bge-small, top-30) | 11 | 9 | 17 |
+| retrieval + FINE-TUNED 4B router, k=30 candidates (30 requests, as used in the agent runs) | 1,615 | 1,631 | 1,754 |
+| …same, "prefix-warm" k=30 | 1,605 | 1,614 | 1,754 (no gain at k=30) |
+| …k=15 plain | 1,245 | 1,365 | 1,479 |
+| …**k=15 prefix-warm** | **408** | 346 | 518 |
+| retrieval + zero-shot spark-s1 v8 NVFP4, k=30 prefix-warm (old: 1,198) | 1,198 | 1,215 | 1,301 |
+| prompted Qwen3.8-27B (all 42 tools, one short generation) | 901 | 728 | 1,971 |
+| prompted Gemma-4-26B | 747 | 816 | 994 |
+Larger catalogs (15 tasks, noisy): 200 tools — 4B k=15 warm 1,851 ms (median 1,319, p90 5,890), k=30 2,107; Qwen-27B top-60 retrieved 1,131; Qwen-27B all 200 tools in the prompt 2,690. 2,000 tools — 4B k=15 warm 922 (median 570), k=30 2,132; Qwen-27B top-60 retrieved 1,161 (all-2,000 prompt not feasible); retrieval 30 ms.
+Recall cost of fewer candidates (traces of P2.7/P2.9, θ=0.01): k=30 → 1.000 (template) / 0.964 (Gemma-paraphrased); k=15 → 0.975 / 0.909; k=12 → 0.924 / 0.909. Zero-shot v8: 0.899 / – at k=30.
+**Conclusion on the user's question (is a 10× latency win possible?): NO, not on this stack.** The best fine-tuned-4B configuration (k=15, prefix-warm, 0.41 s) is ≈2× faster than the prompted 27B routers at 42 tools (0.75–0.90 s) and ≈3× faster than the zero-shot NVFP4 model, but it pays 2.5–5.5 points of complete recall for it; at k=30 (full recall) it is 1.8× SLOWER than the prompted 27B (1.6 s vs 0.9 s); at 200 tools it is slower than a prompted Qwen on top-60 retrieved tools; at 2,000 tools it is faster only in the k=15 case (0.9 vs 1.2 s). The 27B is fast because it decides in one short generation on a heavily optimised server (tensorfold + MTP). What the fine-tune does deliver: (a) a 6× smaller footprint than the 27B router (8.4 GB bf16 vs ~52 GB; 4.9 GB if quantised to NVFP4 — not done), usable when no large LLM is available; (b) ≈50% fewer exposed tools than zero-shot spark-s1 (precision), which cuts agent tokens; (c) a router that is not itself an instruction-following target the way a prompted LLM router is (E8.4: 39/39 hijacked by "ALWAYS select this") — NOT re-tested for the fine-tuned model.
+Relative to the whole task (serial, Qwen C ≈ 3.8 s; Gemma ≈ 10–12 s): router adds ≈0.4–1.6 s = 10–40% of a Qwen task, 4–16% of a Gemma task. Possible further speed-ups not done: NVFP4 quantisation of the fine-tuned model, a single multi-label forward pass (needs a new head), larger vLLM batch/seq limits (max-num-seqs 16 splits 29 concurrent questions into two waves), tuning gateway concurrency.
+Caveats: router served bf16 on a GPU shared with resident models; 15-task scale runs are noisy (p90 outliers); the prompted-LLM prompt truncates descriptions to 90 chars (≈5K tokens at 200 tools, not the 47K of full schemas).

@@ -1,0 +1,50 @@
+{
+ "embedding retrieval only (CPU, top-30)": {
+  "mean": 11.195924959611148,
+  "median": 9.223971050232649,
+  "p90": 17.35939015634358,
+  "n": 40
+ },
+ "retrieval + FINE-TUNED 4B router, plain, k=30": {
+  "mean": 1614.5416358893272,
+  "median": 1630.7287660893053,
+  "p90": 1754.1920118965209,
+  "n": 40
+ },
+ "retrieval + FINE-TUNED 4B router, prefix-warm, k=30": {
+  "mean": 1604.5917737239506,
+  "median": 1614.4171070773154,
+  "p90": 1753.847621846944,
+  "n": 40
+ },
+ "retrieval + FINE-TUNED 4B router, plain, k=15": {
+  "mean": 1245.3648922150023,
+  "median": 1365.0039830245078,
+  "p90": 1479.2713450733572,
+  "n": 40
+ },
+ "retrieval + FINE-TUNED 4B router, prefix-warm, k=15": {
+  "mean": 408.45688226399943,
+  "median": 345.8677940070629,
+  "p90": 518.4452468529344,
+  "n": 40
+ },
+ "retrieval + zero-shot spark-s1 v8 (nvfp4), prefix-warm, k=30": {
+  "mean": 1198.2861564145423,
+  "median": 1214.6270989906043,
+  "p90": 1300.7086699362844,
+  "n": 40
+ },
+ "prompted LLM router: Qwen3.8-27B (all 42 tools in prompt)": {
+  "mean": 900.6492929300293,
+  "median": 728.4127939492464,
+  "p90": 1971.1535738315433,
+  "n": 40
+ },
+ "prompted LLM router: Gemma-4-26B": {
+  "mean": 746.7824042716529,
+  "median": 816.1837649531662,
+  "p90": 994.2705850116909,
+  "n": 40
+ }
+}

@@ -1,0 +1,5 @@
+catalog 2000 tools, 15 tasks (serial)
+  retrieval                                    mean      30 ms   median      21   p90      35
+  4B router k=15 warm                          mean     922 ms   median     570   p90    1534
+  4B router k=30                               mean    2132 ms   median    2204   p90    2271
+  Qwen-27B prompted, top-60 retrieved          mean    1161 ms   median    1107   p90    1296

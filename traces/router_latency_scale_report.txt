@@ -1,0 +1,15 @@
+--- 200
+catalog 200 tools, 15 tasks (serial)
+  retrieval                                    mean      11 ms   median       8   p90      17
+  4B router k=15 warm                          mean    1851 ms   median    1319   p90    5890
+  4B router k=30                               mean    2107 ms   median    2124   p90    2315
+  Qwen-27B prompted, all tools in prompt       mean    2690 ms   median    2671   p90    2862
+  Qwen-27B prompted, top-60 retrieved          mean    1131 ms   median    1039   p90    1191
+--- 2000
+catalog 2000 tools, 15 tasks (serial)
+  retrieval                                    mean      30 ms   median      21   p90      35
+  4B router k=15 warm                          mean     922 ms   median     570   p90    1534
+  4B router k=30                               mean    2132 ms   median    2204   p90    2271
+  Qwen-27B prompted, top-60 retrieved          mean    1161 ms   median    1107   p90    1296
+
+[exited with code 0]

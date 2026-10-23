@@ -1,0 +1,11 @@
+variant                                                                   mean ms  median     p90
+embedding retrieval only (CPU, top-30)                                         11       9      17
+retrieval + FINE-TUNED 4B router, plain, k=30                                1615    1631    1754
+retrieval + FINE-TUNED 4B router, prefix-warm, k=30                          1605    1614    1754
+retrieval + FINE-TUNED 4B router, plain, k=15                                1245    1365    1479
+retrieval + FINE-TUNED 4B router, prefix-warm, k=15                           408     346     518
+retrieval + zero-shot spark-s1 v8 (nvfp4), prefix-warm, k=30                 1198    1215    1301
+prompted LLM router: Qwen3.8-27B (all 42 tools in prompt)                     901     728    1971
+prompted LLM router: Gemma-4-26B                                              747     816     994
+
+[exited with code 0]
