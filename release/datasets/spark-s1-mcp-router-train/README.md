@@ -16,6 +16,8 @@ Training data for [`spark-s1-mcp-router-4b-r1`](https://huggingface.co/abhishek0
 - `data/tool_aliases_raw_nemotron.json`, `data/tool_aliases_verified.json`: alternative names/descriptions for our 28 trainable tools (168 written, 75 verified).
 **Not included:** the 3,000 replay rows from the original spark-s1 training mix that were also used in training (they come from other public datasets with their own licences).
 
+**Which records trained the model.** The released model was trained on a family-balanced subset of `train.jsonl` (at most 520 records per task family, with 85% of the trivial real-catalog-tool "no" questions removed: 4,991 records, 53% positive) plus 800 replay rows (not included). The full 20,700 records are released for transparency and for your own sampling.
+
 ## How it was made
 1. Tasks come from code templates over a synthetic 12-server MCP world (training salt `train`, seeds >= 100, disjoint from the evaluation worlds). Gold tool lists come from the templates, not from an LLM. Five template families and four servers' tools (hr, inventory, support, deployments) are held out of training.
 2. **Paraphrases (1,422) and tool aliases (168) were written by NVIDIA Nemotron-3-Nano-30B-A3B**, then filtered by a deterministic check that every id/number/name/quoted value is preserved and **verified by Qwen3.8-27B** (same-meaning yes/no; 772 paraphrases and 75 aliases kept; the gold tool lists were also audited by Qwen: 316 of 341 judged complete, the 25 flags are one correct doc-search gold list).
