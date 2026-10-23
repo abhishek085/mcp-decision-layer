@@ -24,3 +24,6 @@ training/data/mcp_router_*.jsonl
 training/ckpt/
 training/data/*.out
 training/data/*.pid
+release/datasets/*/data/
+release/datasets/*/traces/
+release/**/*.gguf
