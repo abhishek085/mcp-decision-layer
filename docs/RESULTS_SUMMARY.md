@@ -32,3 +32,24 @@ Everything here is from pilot-size runs on **dev** seeds (0-2, salt "dev"), one 
 
 ## Decision needed
 Fine-tuning (plan Phases 9-10) is a large GPU job. The evidence points to a **tool-subset** fine-tune of spark-s1 as the higher-value target, with the shape fine-tune a smaller, Gemma-only gain.
+
+---
+# Part II — spark-s1-mcp-router (fine-tuned tool router), 2026-10-23
+
+**What was built.** A LoRA fine-tune of spark-s1 v8 (bf16) for tool selection: state = task + 22-30 candidate tools (embedding top-k), one yes/no question per tool. Training data: 341 task instructions from a disjoint training world (5 template families and 4 servers' tools held out), **Nemotron-3-Nano-written paraphrases (1,422) and tool aliases (168)**, **verified by Qwen3.8-27B** (772 paraphrases and 75 aliases kept; gold-tool labels audited, no real errors), labels from code, negatives from 6,536 real catalog tools never used as eval distractors. Leakage filter removed 17 instructions identical to dev/test ones. Checkpoint `training/ckpt/mcp-router-v3` (gitignored, 8.4 GB). Full log: `docs/EXPERIMENT_LOG.md` P2.1-P2.11.
+
+**Corrections to Part I.** (1) The zero-shot spark-s1 is a much better tool selector than Part I said once the candidate list is inside the state (100% complete recall at 5.1 tools, not 95% at 16). The Part I finding "spark-s1 is a weak zero-shot tool selector" was largely my question design. (2) Training v1/v2 had to be aborted: loss hit 0 in ~40 steps because 40% of the questions were trivially "no" (a tool-name-only rule scored 91%); v3 downsampled those.
+
+| Result | Zero-shot v8 | Fine-tuned v3 |
+|---|---|---|
+| Complete recall at 42 tools, template wording (θ=0.01) | 0.899 at 3.3 tools (1.000 only at 5.1) | **1.000 at 2.8 tools** |
+| Same, Gemma-paraphrased wording (never seen) | 0.873 at 3.7 tools | **0.964 at 3.0 tools** |
+| Seen families / unseen tool servers / unseen families | 0.74-0.87 / 1.00 / 0.90-1.00 | 1.00 (0.93 paraphrased) / 1.00 / 1.00 at θ<=0.05 (0.80 at θ=0.5) |
+| 200 and 2,000 tools | at the retrieval ceiling (0.646 / 0.443) with 5.3 / 6.2 tools | same ceiling with **2.6 / 3.4 tools** |
+| Router latency, clean serial, 42 tools | 1.2 s (k=30) | 1.6 s (k=30), **0.41 s (k=15 prefix-warm, recall 0.975/0.909)** |
+
+**Latency: no 10x win.** A prompted Qwen-27B or Gemma-26B router takes 0.75-0.9 s (one short generation); the fine-tuned 4B is ~2x faster only when limited to 15 candidates (with a 2.5-5.5 point recall loss) and slower at 30. What it does give: 6x smaller footprint (8.4 GB vs ~52 GB), ~50% fewer exposed tools than zero-shot, and a scoring (not instruction-following) selector.
+
+**End to end (hinted stubs, dev cells).** Gemma agent + code mode + this router: success 0.932 vs 0.864 for code mode alone (+6.8 pp, CI [+1.7,+12.7]); utility +0.046 (CI [-0.047,+0.123], not significant). The prompted Qwen-27B router did better (0.966, utility +0.109) though the fine-tuned router's tool recall is higher (0.987 vs 0.966) - the gap is agent-side noise at n=118. Qwen agent: ties code mode alone (0.966 vs 0.975), as every decision-layer variant does.
+
+**Open items.** Regression check of v8 skills (running), NVFP4 quantisation of the router, re-test of the router against the "ALWAYS select me" poisoned-description attack, a broader/harder training distribution (the 11-family template data makes the model near-perfect in distribution), a better candidate generator for large catalogs, and the sealed test set.
