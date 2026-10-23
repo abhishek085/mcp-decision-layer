@@ -14,18 +14,38 @@ Q_PROMPT = ("Is the tool '{name}' needed to complete the task? Count it as neede
 def render_state(task, cands):
     return "Task: " + task + "\nCandidate tools:\n" + "\n".join(f"- {c['name']}: {short(c['description'], 90)}" for c in cands)
 
-def build(paraphrased, aliases_ok, neg_pool, out_train, out_val, seed=0, states_per_text=2, n_pool=600, n_cand=22, nq=6, val_frac=0.05):
+_EMBCACHE = {}
+def emb_texts(texts):
+    """Embed once per unique text (cached)."""
+    from fastembed import TextEmbedding
+    if "model" not in _EMBCACHE: _EMBCACHE["model"] = TextEmbedding("BAAI/bge-small-en-v1.5")
+    new = [t for t in dict.fromkeys(texts) if t not in _EMBCACHE]
+    if new:
+        for t, v in zip(new, _EMBCACHE["model"].embed(new)): _EMBCACHE[t] = np.array(v)
+    return np.stack([_EMBCACHE[t] for t in texts])
+def tool_text(u): return u["name"].replace("_", " ") + ". " + short(u["description"], 300)
+
+def build(paraphrased, aliases_ok, neg_pool, out_train, out_val, seed=0, states_per_text=3, n_pool=600, n_cand=22, nq=6, val_frac=0.05):
     rng = random.Random(seed)
     own = [t for t in catalog(0) if t["name"] not in HELDOUT_TOOLS]
     pool_all = neg_pool
     rows = [json.loads(l) for l in open(paraphrased)]
+    # leakage filter (plan 6.2 step 5): drop training instructions identical to any dev/test-suite instruction (seeds 0-5)
+    from worlds.world import World
+    from tasks.templates import build_suite
+    nz = lambda t: re.sub(r"\W+", " ", t.lower()).strip()
+    devn = {nz(t.instruction) for salt in ("dev", "test") for sd in range(6) for t in build_suite(World(sd, "medium", salt))}
+    before = len(rows); rows = [r for r in rows if nz(r["instruction"]) not in devn]
+    print("leakage filter: dropped", before - len(rows), "of", before, "training instructions identical to dev/test suite instructions")
     stats = collections.Counter(); recs_tr, recs_va = [], []
     instr_ids = sorted({r["instruction"] for r in rows}); rng.shuffle(instr_ids)
     val_set = set(instr_ids[:max(1, int(len(instr_ids) * val_frac))])
+    fam_ct = collections.Counter(r['family'] for r in rows for p in r['paraphrases'] if p.get('slots_ok') and p.get('qwen_ok', True))
     for r in rows:
+        spt = states_per_text if fam_ct[r['family']] >= 30 else states_per_text * 3
         texts = [(r["instruction"], "template")] + [(p["text"], "nemotron") for p in r["paraphrases"] if p.get("slots_ok") and p.get("qwen_ok", True)]
         for text, src in texts:
-            for si in range(states_per_text):
+            for si in range(spt):
                 use_alias = rng.random() < 0.4
                 mp = {}
                 if use_alias:
@@ -36,7 +56,9 @@ def build(paraphrased, aliases_ok, neg_pool, out_train, out_val, seed=0, states_
                 pool = [dict(name=p["name"], description=p["description"], own=False) for p in rng.sample(pool_all, n_pool)]
                 universe = [view(t) for t in own] + [dict(p, orig=p["name"]) for p in pool]
                 gold = set(r["gold"])
-                rk = embed_rank(text, [dict(name=u["name"], description=u["description"]) for u in universe])
+                qv = emb_texts([text])[0]
+                sims = emb_texts([tool_text(u) for u in universe]) @ qv
+                rk = list(np.argsort(-sims))
                 chosen = [universe[i] for i in rk[:n_cand]]
                 gset = [u for u in universe if u["orig"] in gold]
                 for g in gset:
