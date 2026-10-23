@@ -569,3 +569,14 @@ Summary for the fine-tuned router (Gemma agent): captures about half of the orac
 
 ## P2.11 — Router LATENCY comparison (user request: recall within 1–2 pts but latency 10× could be the real win)
 Status when asked: NOT yet measured cleanly. `router_ms` in the agent traces was recorded under load (other models generating, concurrency 3–8, memory-bandwidth contention E1.3), and as implemented the fine-tuned 4B router is SLOWER than the prompted 27B router (≈2.2 s vs ≈0.9 s per task, contended): it issues 30 separate yes/no requests that all share a ~1.3K-token state prefix and arrive simultaneously, so vLLM cannot reuse the prefix cache. Plan: serial benchmark with nothing else running (bench/router_latency.py): embedding retrieval, 4B router plain vs "prefix-warm" (first question alone fills the cache, rest reuse it), k=30 vs k=15 candidates, zero-shot spark-s1 NVFP4, Qwen-27B prompted router, Gemma-26B prompted router; mean/median/p90 over 40 tasks. Runs after the Qwen end-to-end batch (to avoid contention).
+
+### P2.10b results — Qwen agent + fine-tuned router (θ=0.05), 119 matched cells (traces/p10_qwen_mcprouter_s012.jsonl; table traces/p10_qwen_compare.txt)
+| config | success | tokens (router incl.) | U(tok) | Δsucc vs C [CI] | ΔU(tok) vs C [CI] |
+|---|---|---|---|---|---|
+| C (hinted) | 0.975 | 4,474 | 0.930 | – | – |
+| D/mcprouter/code | 0.966 | 6,314 | 0.903 | −0.008 [−0.042,+0.017] | −0.027 [−0.064,+0.006] |
+| D/llm/code (Gemma router) | 0.966 | 4,576 | 0.921 | −0.008 | −0.009 [−0.032,+0.005] |
+| D/spark_a/rules (zero-shot, old format) | 0.992 | 12,404 | 0.868 | +0.017 | −0.062 [−0.081,−0.036] |
+| B/mcprouter | 0.840 | 12,183 | 0.719 | −0.134 | −0.212 |
+| A | 0.832 | 30,649 | 0.525 | −0.143 | −0.405 |
+Same conclusion as E7.3 for the strong-code-mode SUT: nothing beats plain code mode on utility for Qwen; the fine-tuned router is on par with the prompted Gemma router and does not hurt success (0.966 vs 0.975, CI includes 0) but adds ~1.8K tokens (router, prefix-cached accounting) → ΔU(tok) −0.027 n.s. The router helps agents whose own code mode is weak (Gemma), not Qwen.
