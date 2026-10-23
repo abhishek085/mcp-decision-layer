@@ -652,3 +652,15 @@ Protocol: concurrency 1, one agent model generating at a time, other containers 
 | D/oracle/code (gold tool list, router cost 0) | 0.97 | 2,893 | **3.2 / 3.0 / 4.8** | 3.1 | 0 | 0.939 | 0.882 |
 Paired vs C (95% CI): latency A +4.47 s [+1.74,+8.20]; B +3.49 s [+1.95,+5.39]; **D/mcprouter +2.22 s [+0.89,+4.60]**; **D/oracle −0.71 s [−0.98,−0.47]**. ΔU(λl=.002): A −0.60, B −0.27, D/mcprouter −0.063 [−0.149,−0.004], D/oracle +0.019 [+0.014,+0.026]. Sandbox and tool time ≈0 (in-process mock tools).
 Reading: (1) code mode is the latency winner and the plain-MCP penalty is ~4.5 s even at 42 tools; (2) a perfect, free tool subset makes D faster than C (−0.7 s, fewer exposed stubs, fewer tokens) — that is the ceiling for the decision layer on Qwen; (3) the REAL fine-tuned router costs 1.5 s (30 yes/no requests, ≈50 ms each) which exceeds that saving by ~2 s, so D is slower than C on Qwen. Break-even: the router must cost < ≈0.7 s on Qwen (or be a single-pass scorer) for D to win on latency; on the success axis D ties C. Next: Gemma and Nemotron passes, then the scale arm.
+
+### P3.2 results — Clean serial latency, Gemma-4-26B-A4B agent (vLLM, ~30 tok/s decode), 39 dev tasks seed 0, hinted stubs, concurrency 1 (traces/p11_latency_gemma_s0.jsonl; report traces/p11_latency_gemma_report.txt)
+| config | success | tokens | latency mean | **median** | trimmed mean* | p90 | runs >60 s | router s |
+|---|---|---|---|---|---|---|---|---|
+| A (plain MCP) | 0.82 | 16,690 | 8.5 | 5.8 | 7.6 | 21.0 | 0 | – |
+| B/mcprouter | 0.87 | 8,547 | 10.1 | 7.9 | 9.3 | 18.9 | 0 | 1.7 |
+| C (code mode) | 0.79 | 5,525 | **28.5** | 6.6 | 10.3 | **33.9** | **2** (683 s, 61 s) | – |
+| D/mcprouter/code | 0.90 | 4,287 | 15.7 | 7.4 | 9.1 | 21.4 | 1 (244 s) | 1.6 |
+| D/oracle/code | 0.90 | 2,034 | 9.0 | 7.5 | 8.2 | 19.3 | 0 | 0 |
+*drop 2 highest and 2 lowest. Latency (s). One errored D run (router HTTP error, infra) was removed and re-run under the same conditions.
+Reading: for Gemma the typical (median) latency is similar for all configs (6–8 s); the differences live in the TAIL. Code mode (C) has the worst tail: one run took 683 s (runaway script generation + three failed executions at 30 tok/s) and p90 34 s; the decision layer (D/mcprouter) cuts the mean 28.5 → 15.7 s and p90 34 → 21 s while raising success 0.79 → 0.90 (paired success +0.103 [0.000,+0.231]; paired mean-latency difference −12.9 s but CI [−54, +15] because of the outliers; with a perfect tool list D/oracle: success +0.103, U(λl=.002) +0.177 [+0.009,+0.387], U(λl=.02) +0.528 [+0.010,+1.412]). Router time is 1.6–1.7 s, i.e. ~20% of a typical 7.5 s Gemma task. Mean latencies are NOT robust here (one 683 s outlier moves C's mean by ~17 s); medians/trimmed means/p90 are the honest summary. Operational point: a generation/time cap on script generation is needed for code mode with slow decoders; fallback to JSON after a time cap would bound the tail. n=39 tasks, one seed.
+## P3.3 — Nemotron serial pass (next), then scale arm.
