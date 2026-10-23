@@ -1,0 +1,23 @@
+spark-s1-mcp-router-4b-r1
+Copyright 2026 abhishek085 and the Nokast AI community contributors.
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This model is a fine-tuned derivative. Third-party components and their licences:
+
+1. Qwen3.5-4B (backbone, via spark-s1) - Apache License 2.0 - Alibaba Cloud / Qwen team
+   https://huggingface.co/Qwen/Qwen3.5-4B   (licence text: licenses/Qwen3.5-4B-LICENSE-Apache-2.0.txt)
+   CHANGES: the weights were fine-tuned (LoRA r=16, merged), converted to GGUF with llama.cpp, and quantised.
+
+2. spark-s1 (starting checkpoint: an internal bf16 checkpoint of spark-s1-4b-v8) - Apache License 2.0
+   Open Spark Jev, Nokast AI community. Not affiliated with TypeSafe AI.
+
+3. Training data written with NVIDIA Nemotron-3-Nano-30B-A3B (outputs only; the Nemotron weights are not part of this model).
+   NVIDIA Nemotron Open Model License (copy: licenses/NVIDIA-Nemotron-Open-Model-License.txt): "NVIDIA does not claim ownership to any outputs".
+   Courtesy notice: Licensed by NVIDIA Corporation under the NVIDIA Nemotron Model License.
+
+4. Tool definitions used as negative examples: automatelab/mcp-servers-tool-catalog - CC BY 4.0
+   https://huggingface.co/datasets/automatelab/mcp-servers-tool-catalog
+
+5. Conversion/quantisation tooling: llama.cpp (MIT) https://github.com/ggml-org/llama.cpp
+
+Models used only to verify or evaluate data (no generated text from them is in the training data): Qwen3.8-27B, Gemma-4-26B-A4B.

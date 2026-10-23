@@ -27,3 +27,4 @@ training/data/*.pid
 release/datasets/*/data/
 release/datasets/*/traces/
 release/**/*.gguf
+release/*.log
