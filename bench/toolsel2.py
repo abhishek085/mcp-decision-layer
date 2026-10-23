@@ -20,10 +20,11 @@ def ask_router(url, model, state, names, maxq=40):
         for k, d in r["decisions"].items(): out[k] = d["probabilities"]["true"]
     return out, ms
 
-def run(url, model, n_dist, seeds, out_path, k=30, texts=None):
+def run(url, model, n_dist, seeds, out_path, k=30, texts=None, only_texts=False):
     tools = catalog(n_dist); names = [t["name"] for t in tools]; rows = []
     for seed in seeds:
         for t in build_suite(World(seed, "medium", "dev")):
+            if only_texts and t.instruction not in (texts or {}): continue
             text = (texts or {}).get(t.instruction, t.instruction)
             rk = embed_rank(text, tools); cand = [tools[i] for i in rk[:k]]
             state = render_state(text, cand)
@@ -48,5 +49,5 @@ def report(rows, label):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--url", default="http://localhost:8400/v1/decide"); ap.add_argument("--model", default=None)
-    ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1]); ap.add_argument("--out", required=True); ap.add_argument("--label", default="router")
-    a = ap.parse_args(); rows = run(a.url, a.model, a.ndist, a.seeds, a.out); report(rows, a.label)
+    ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1]); ap.add_argument("--out", required=True); ap.add_argument("--label", default="router"); ap.add_argument("--paraphrases", default=None)
+    a = ap.parse_args(); tx = json.load(open(a.paraphrases))["kept"] if a.paraphrases else None; rows = run(a.url, a.model, a.ndist, a.seeds, a.out, texts=tx, only_texts=bool(tx)); report(rows, a.label)

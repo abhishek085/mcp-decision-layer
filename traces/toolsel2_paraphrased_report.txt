@@ -1,0 +1,46 @@
+=== zs
+### zero-shot v8 on Gemma-paraphrased dev tasks  (catalog 42 tools, candidates 30)
+ [all] n=55   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   0.945  0.970    6.8    4.7
+    th=0.01    0.873  0.927    3.7    1.8
+    th=0.05    0.855  0.921    2.8    0.9
+    th=0.5     0.782  0.873    2.1    0.3
+ [seen families & tools] n=27   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   0.889  0.938    8.1    6.3
+    th=0.01    0.741  0.852    3.6    2.0
+    th=0.05    0.704  0.840    2.7    1.1
+    th=0.5     0.556  0.741    1.7    0.4
+ [unseen tools] n=24   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   1.000  1.000    5.2    2.8
+    th=0.01    1.000  1.000    3.7    1.3
+    th=0.05    1.000  1.000    2.9    0.5
+    th=0.5     1.000  1.000    2.4    0.1
+ [unseen families] n=20   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   1.000  1.000    5.9    3.6
+    th=0.01    1.000  1.000    4.2    1.9
+    th=0.05    1.000  1.000    3.0    0.7
+    th=0.5     1.000  1.000    2.4    0.1
+=== r3
+### FINE-TUNED v3 on Gemma-paraphrased dev tasks  (catalog 42 tools, candidates 30)
+ [all] n=55   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   0.964  0.982    3.7    1.6
+    th=0.01    0.964  0.982    3.0    1.0
+    th=0.05    0.964  0.982    2.7    0.7
+    th=0.5     0.891  0.945    2.5    0.5
+ [seen families & tools] n=27   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   0.926  0.963    3.3    1.4
+    th=0.01    0.926  0.963    2.6    0.7
+    th=0.05    0.926  0.963    2.3    0.4
+    th=0.5     0.926  0.963    2.2    0.3
+ [unseen tools] n=24   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   1.000  1.000    3.7    1.3
+    th=0.01    1.000  1.000    3.2    0.8
+    th=0.05    1.000  1.000    2.8    0.5
+    th=0.5     1.000  1.000    2.6    0.3
+ [unseen families] n=20   threshold:  complete-recall / frac-recall / n_sel / extra
+    th=0.002   1.000  1.000    4.3    2.0
+    th=0.01    1.000  1.000    3.8    1.5
+    th=0.05    1.000  1.000    3.5    1.2
+    th=0.5     0.800  0.900    3.0    0.8
+
+[exited with code 0]

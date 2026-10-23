@@ -534,3 +534,18 @@ Infra: starting two vLLM containers simultaneously crashed both (memory-profilin
 | 2,000 | 0.443 | 0.443 / 6.2 | **0.443 / 3.4** | 0.443 / 2.3 |
 Both routers reach the retrieval ceiling at every threshold (no classifier misses); the fine-tune does it with ~45–50% fewer exposed tools (extras 0.8 vs 3.6 at 200; 1.9 vs 4.6 at 2,000; at θ=0.3, 0.3 vs 0.5 and 0.7 vs 0.9). So the fine-tune improves PRECISION (token cost of the exposed subset) but cannot move the ceiling; scaling to large catalogs needs a better candidate generator (the embedding top-30 loses generic enabling tools).
 (Correction note: an interim grep in this session mis-read a different group's block as the 2,000-tool number; the ceilings used in P2.3b and above were computed directly from the traces: 0.646 and 0.443.)
+
+## P2.9 — Held-out WORDING test: Gemma (test-side writer) paraphrases of the dev tasks, verified by Qwen (training/paraphrase_dev.py; traces/dev_paraphrases_gemma.json)
+43 unique dev instructions → 41 pass the deterministic slot check → 31 pass Qwen's same-meaning check (non-copies kept) → 55 task rows (seeds 0,1), 42-tool catalog, same bge top-30 candidates. Report: traces/toolsel2_paraphrased_report.txt. Complete-recall / tools selected:
+| group (n) | θ | zero-shot v8 | **fine-tuned v3** |
+|---|---|---|---|
+| all (55) | 0.002 | 0.945 / 6.8 | **0.964 / 3.7** |
+| all | 0.01 | 0.873 / 3.7 | **0.964 / 3.0** |
+| all | 0.05 | 0.855 / 2.8 | **0.964 / 2.7** |
+| all | 0.5 | 0.782 / 2.1 | 0.891 / 2.5 |
+| seen families & tools (27) | 0.01 | 0.741 / 3.6 | **0.926 / 2.6** |
+| unseen tools (24) | 0.01 | 1.000 / 3.7 | 1.000 / 3.2 |
+| unseen families (20) | 0.01 | 1.000 / 4.2 | 1.000 / 3.8 |
+| unseen families | 0.5 | 1.000 / 2.4 | 0.800 / 3.0 |
+Reading: on wording the router never saw (different writer family, verified) the zero-shot model degrades (0.87 at θ=0.01 with 3.7 tools; seen families only 0.74) while the fine-tune keeps 0.96 with 3.0 tools — the fine-tune genuinely generalises beyond template phrasing; it loses a little against template wording (seen-family recall 1.00 → 0.93), so the in-distribution perfection of P2.7 was partly template memorisation. At high thresholds (0.5) the fine-tune is worse than zero-shot on unseen families (0.80 vs 1.00): use θ ≤ 0.05.
+Caveats: n=55 rows from 31 unique paraphrased instructions; the paraphrase set is filtered by a verifier (31/43), selection may favour easy rewrites; θ not yet fixed independently (choose θ=0.05 for the end-to-end runs: smallest tool count with recall ≥0.95 on this + the template eval; tuned on dev data).

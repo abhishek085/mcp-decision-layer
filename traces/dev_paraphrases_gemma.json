@@ -1,0 +1,295 @@
+{
+ "all": {
+  "What is the full name of the assignee of issue ATL-0008? Answer with the name only.": {
+   "text": "Identify the complete name of the person assigned to ATL-0008, providing only the name as your response.",
+   "style": "a step-by-step checklist item",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Find the assignee of issue ATL-0012, look up their name, and send them a chat message of the form 'Hi <full name>, please review ATL-0012'. Reply 'done'.": {
+   "text": "I need you to immediately identify who is assigned to ATL-0012, get their complete name, and then ping them via chat with this specific message: 'Hi <full name>, please review ATL-0012'. Once that is finished, just respond with 'done'.",
+   "style": "an urgent message from a non-technical colleague",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Which service has the most ERROR-level log lines? Answer with the service name only.": {
+   "text": "Identify the service associated with the highest frequency of log entries categorized as ERROR-level. Provide the name of the service as the sole component of your response.",
+   "style": "a precise technical instruction",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "How many WARN-level log lines from the 'api' service have a message containing the word 'cache'? Answer with the number only.": {
+   "text": "Can you find the total count of WARN-level logs for the 'api' service that include 'cache' in the message? Just give me the number.",
+   "style": "a casual Slack message",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "How many WARN-level log lines from the 'worker' service have a message containing the word 'cache'? Answer with the number only.": {
+   "text": "Can you check the 'worker' service logs for any WARN-level entries that mention 'cache'? Just let me know the total count as a single number.",
+   "style": "a casual Slack message",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "What is the total amount of all unpaid invoices for customer Acme? Answer with the number only.": {
+   "text": "Provide the sum of every outstanding invoice belonging to Acme. Return only the numerical value.",
+   "style": "a ticket written by a busy manager",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "What is the total amount of all unpaid invoices for customer Fjord? Answer with the number only.": {
+   "text": "Provide the sum of Fjord's outstanding invoices. Return only the numerical value.",
+   "style": "a terse chat message",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Issue a full refund (refund amount equal to the invoice amount) for every overdue invoice of customer Birch whose amount exceeds 1000. Reply 'done'.": {
+   "text": "For every invoice associated with customer Birch that is currently overdue and possesses a balance greater than 1000, process a complete reimbursement equivalent to the total invoice value. Respond with 'done'.",
+   "style": "a precise technical instruction",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Issue a full refund (refund amount equal to the invoice amount) for every overdue invoice of customer Ember whose amount exceeds 500. Reply 'done'.": {
+   "text": "For all unpaid invoices belonging to the customer Ember that have a total value greater than 500, process a complete reimbursement equivalent to the full invoice total and respond with 'done'.",
+   "style": "a precise technical instruction",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "One issue has a comment containing the code 'zx22368'. Who (full name) is that issue's assignee? Answer with the name only.": {
+   "text": "Could you please identify the full name of the individual assigned to the issue that features a comment with the code 'zx22368'? Please provide only the name in your response.",
+   "style": "a polite email request",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "In repo 'beacon', which person is assigned the most open bug issues? Answer with the full name only (if tied, any tied person is fine).": {
+   "text": "I need to know right away who has the highest number of unresolved bugs assigned to them within the 'beacon' repository. Please provide just their full name; if there's a tie, any of the names involved will work.",
+   "style": "an urgent message from a non-technical colleague",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "In repo 'cinder', which person is assigned the most open bug issues? Answer with the full name only (if tied, any tied person is fine).": {
+   "text": "I need to know right away who has the highest number of unresolved bugs in the 'cinder' repository. Please just provide that individual's full name; if there's a tie, any one of the people involved will work.",
+   "style": "an urgent message from a non-technical colleague",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "For each of the first 1 open issues (any label) in repo 'atlas' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": {
+   "text": "Go through the very first 1 open issue in the 'atlas' repo (regardless of labels) following the tracker's sequence. DM the assignee with the issue id for each one, then just type 'done' once you're all set.",
+   "style": "a casual Slack message",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "For each of the first 5 open issues (any label) in repo 'atlas' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": {
+   "text": "Message the assignee the issue id for the 5 most recent open issues in repo 'atlas' (any label), following their chronological tracker order. Say 'done' once completed.",
+   "style": "a terse chat message",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "For each of the first 15 open issues (any label) in repo 'atlas' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": {
+   "text": "Please navigate to the 'atlas' repository and locate the initial 15 open issues, regardless of their labels. Following the specific sequence presented in the tracker, please transmit a chat message to the designated assignee for each one, ensuring the message includes the corresponding issue id. Once this process is complete, please respond with 'done'.",
+   "style": "a polite email request",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "For each of the first 30 open issues (any label) in repo 'atlas' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": {
+   "text": "Please initiate a chat notification to the designated assignee for every one of the initial 30 unresolved issues within the 'atlas' repository, following their current chronological order in the tracker. Each message must include the specific issue id. Once this task is complete, respond with 'done'.",
+   "style": "a formal operations request",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "For each of the first 5 open issues (any label) in repo 'beacon' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": {
+   "text": "I need you to hurry and message the person assigned to each of the top 5 currently active issues in the 'beacon' repository. Please go through them in the exact sequence they appear in the tracker and make sure your chat message includes the specific issue id for each one. Once you have completed this for all 5, just type 'done'.",
+   "style": "an urgent message from a non-technical colleague",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "For each of the first 15 open issues (any label) in repo 'cinder' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": {
+   "text": "Please navigate to the 'cinder' repository and identify the initial 15 open issues, regardless of their labels, following their current chronological order in the tracker. For every one of these issues, forward a chat message to the assigned individual that includes the corresponding issue id. Once you have completed this task for all 15 issues, please respond with the word 'done'.",
+   "style": "a polite email request",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "Roll back every failed deployment of service 'api' in the 'prod' environment. Reply 'done'.": {
+   "text": "Please immediately undo all unsuccessful deployments for the 'api' service within the 'prod' environment. Just send back 'done' once it is finished.",
+   "style": "an urgent message from a non-technical colleague",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Roll back every failed deployment of service 'worker' in the 'staging' environment. Reply 'done'.": {
+   "text": "Revert all unsuccessful deployment attempts for the 'worker' service within the 'staging' environment and respond with 'done'.",
+   "style": "a precise technical instruction",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Restock by exactly 50 units every SKU whose current stock is below 20. Reply 'done'.": {
+   "text": "For any SKU with a current inventory level under 20, please increase the stock by a quantity of exactly 50 units. Respond with 'done' once completed.",
+   "style": "a ticket written by a busy manager",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Restock by exactly 50 units every SKU whose current stock is below 40. Reply 'done'.": {
+   "text": "If any SKU has less than 40 in stock, go ahead and add exactly 50 units to it. Just shoot back 'done' when you're finished.",
+   "style": "a casual Slack message",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "Move every 'smb' segment CRM account currently in stage 'lead' to stage 'trial'. Reply 'done'.": {
+   "text": "[ ] Update the status of all CRM accounts categorized as 'smb' segments from 'lead' to 'trial', then respond with 'done'.",
+   "style": "a step-by-step checklist item",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "For each open support ticket with priority 'high', email its assignee (use the email address from the HR record) with subject 'Ticket <ticket id>' and any body. Reply 'done'.": {
+   "text": "Identify all active support tickets assigned a 'high' priority. For every such ticket, transmit an email to the designated assignee, retrieving the recipient's address from their corresponding HR record, utilizing 'Ticket <ticket id>' as the subject line and providing any text for the message body. Conclude by responding with 'done'.",
+   "style": "a precise technical instruction",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "For each open support ticket with priority 'med', email its assignee (use the email address from the HR record) with subject 'Ticket <ticket id>' and any body. Reply 'done'.": {
+   "text": "1. Locate all active support tickets assigned a priority of 'med'.\n2. For every identified ticket, send an email to the designated assignee using the contact information found in their HR record.\n3. Format the email subject line as 'Ticket <ticket id>' and include any content in the body.\n4. Respond with 'done'.",
+   "style": "a step-by-step checklist item",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "Starting from person u006, follow manager links upward until you reach the person with no manager. How many managers are in the chain, not counting u006 themselves? Answer with the number only.": {
+   "text": "Identify the sequence of managerial relationships beginning with u006 and ascending through each supervisor until the top-level individual is identified. Calculate the total count of managers within this hierarchy, excluding u006. Provide the result as a single integer.",
+   "style": "a formal operations request",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Starting from person u012, follow manager links upward until you reach the person with no manager. How many managers are in the chain, not counting u012 themselves? Answer with the number only.": {
+   "text": "Please trace the management hierarchy ascending from user u012 until the top-level individual without a supervisor is identified. Calculate the total quantity of managers within this reporting line, excluding u012. Provide the result as a single numeric value.",
+   "style": "a formal operations request",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Starting from person u020, follow manager links upward until you reach the person with no manager. How many managers are in the chain, not counting u020 themselves? Answer with the number only.": {
+   "text": "Trace the management hierarchy upwards beginning with individual u020, proceeding through each successive manager until a person without an assigned manager is identified. Determine the total count of managers within this lineage, excluding u020. Provide your response as a single integer.",
+   "style": "a formal operations request",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "One knowledge-base document contains the reference code 'qk35419'. Who is that document's author (full name)? Answer with the name only.": {
+   "text": "I need to know right away who wrote the knowledge-base document associated with the reference code 'qk35419'. Please provide just the person's full name.",
+   "style": "an urgent message from a non-technical colleague",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Append the text 'Reviewed' to every document tagged 'infra'. Reply 'done'.": {
+   "text": "Can you go through all the docs with the 'infra' tag and add 'Reviewed' to the end of them? Just shoot me a 'done' once you're finished.",
+   "style": "a casual Slack message",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Append the text 'Reviewed' to every document tagged 'bug'. Reply 'done'.": {
+   "text": "Can you add the word 'Reviewed' to the end of all docs with the 'bug' tag? Just shoot back a 'done' once you're finished.",
+   "style": "a casual Slack message",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Each report file under 'reports/q2' ends with a line 'TOTAL: <number>'. What is the sum of these TOTAL values over all files under 'reports/q2'? Answer with the number only.": {
+   "text": "Calculate the aggregate sum of the numerical values found following the 'TOTAL: ' string at the conclusion of every file located within the 'reports/q2' directory. Provide the final integer as the sole output.",
+   "style": "a precise technical instruction",
+   "slots_ok": false,
+   "qwen_ok": false
+  },
+  "Each report file under 'reports/' ends with a line 'TOTAL: <number>'. What is the sum of these TOTAL values over all files under 'reports/'? Answer with the number only.": {
+   "text": "Calculate the aggregate sum of the numerical values located at the end of every line matching the pattern 'TOTAL: <number>' within all files contained in the 'reports/' directory. Provide the result as a single integer.",
+   "style": "a precise technical instruction",
+   "slots_ok": true,
+   "qwen_ok": false
+  },
+  "For every member of the 'data' team, create a calendar event titled 'planning' on day 5 unless that person already has an event on day 5. Reply 'done'.": {
+   "text": "1. Check the schedule for each individual in the 'data' team on day 5.\n2. If a person does not have a pre-existing entry for that day, schedule a new event named 'planning'.\n3. Respond with 'done'.",
+   "style": "a step-by-step checklist item",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "For every member of the 'platform' team, create a calendar event titled 'planning' on day 3 unless that person already has an event on day 3. Reply 'done'.": {
+   "text": "Generate a 'planning' calendar entry for each individual assigned to the 'platform' team on day 3, provided no existing event is scheduled for them on that same day; respond with 'done' upon completion.",
+   "style": "a precise technical instruction",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Set priority to 'high' on every open support ticket of customer Fjord that currently has priority 'low'. Reply 'done'.": {
+   "text": "Update all currently open support tickets for customer Fjord that are marked with 'low' priority to 'high' priority. Once completed, respond with 'done'.",
+   "style": "a ticket written by a busy manager",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Find the unpaid invoice of customer Corvid with the largest amount. Then email the lead of the 'security' team (their email address, from HR) with subject 'Invoice <invoice id>' and any body. Reply 'done'.": {
+   "text": "Identify Corvid's highest unpaid invoice. Message the security team lead (get their email via HR) using subject 'Invoice <invoice id>' and any content. Respond 'done'.",
+   "style": "a terse chat message",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Find the unpaid invoice of customer Dunmore with the largest amount. Then email the lead of the 'growth' team (their email address, from HR) with subject 'Invoice <invoice id>' and any body. Reply 'done'.": {
+   "text": "Identify the outstanding invoice for the client Dunmore that carries the highest monetary value. Once located, contact the individual serving as the lead for the 'growth' team by sending an email to the address provided by HR. The subject line must be formatted as 'Invoice <invoice id>' and the body may contain any content. Conclude the task by responding with 'done'.",
+   "style": "a formal operations request",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Find the service with the most ERROR-level log lines. Roll back that service's most recent failed deployment in 'prod' (the one with the highest deployment id). Reply 'done'.": {
+   "text": "Identify the service generating the highest volume of ERROR logs. Revert its latest unsuccessful 'prod' deployment (the one featuring the greatest deployment id), then respond with 'done'.",
+   "style": "a terse chat message",
+   "slots_ok": false,
+   "qwen_ok": false
+  },
+  "One issue has a comment containing the code 'zx18558'. Who (full name) is that issue's assignee? Answer with the name only.": {
+   "text": "Identify the full name of the person assigned to the issue that features the comment 'zx18558'. Provide only the name in your response.",
+   "style": "a ticket written by a busy manager",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Move every 'ent' segment CRM account currently in stage 'trial' to stage 'customer'. Reply 'done'.": {
+   "text": "Please immediately update all CRM accounts that have 'ent' in their segment and are currently sitting in 'trial' stage by switching them over to 'customer' stage. Just send back 'done' once you've finished.",
+   "style": "an urgent message from a non-technical colleague",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "One knowledge-base document contains the reference code 'qk53617'. Who is that document's author (full name)? Answer with the name only.": {
+   "text": "Identify the full name of the person who wrote the knowledge-base document referencing 'qk53617'. Provide the name as the sole response.",
+   "style": "a ticket written by a busy manager",
+   "slots_ok": true,
+   "qwen_ok": true
+  },
+  "Set priority to 'high' on every open support ticket of customer Acme that currently has priority 'low'. Reply 'done'.": {
+   "text": "Update all 'low' priority tickets for Acme that are still open to 'high' priority, then respond 'done'.",
+   "style": "a terse chat message",
+   "slots_ok": true,
+   "qwen_ok": true
+  }
+ },
+ "kept": {
+  "What is the full name of the assignee of issue ATL-0008? Answer with the name only.": "Identify the complete name of the person assigned to ATL-0008, providing only the name as your response.",
+  "Find the assignee of issue ATL-0012, look up their name, and send them a chat message of the form 'Hi <full name>, please review ATL-0012'. Reply 'done'.": "I need you to immediately identify who is assigned to ATL-0012, get their complete name, and then ping them via chat with this specific message: 'Hi <full name>, please review ATL-0012'. Once that is finished, just respond with 'done'.",
+  "Which service has the most ERROR-level log lines? Answer with the service name only.": "Identify the service associated with the highest frequency of log entries categorized as ERROR-level. Provide the name of the service as the sole component of your response.",
+  "How many WARN-level log lines from the 'api' service have a message containing the word 'cache'? Answer with the number only.": "Can you find the total count of WARN-level logs for the 'api' service that include 'cache' in the message? Just give me the number.",
+  "What is the total amount of all unpaid invoices for customer Acme? Answer with the number only.": "Provide the sum of every outstanding invoice belonging to Acme. Return only the numerical value.",
+  "What is the total amount of all unpaid invoices for customer Fjord? Answer with the number only.": "Provide the sum of Fjord's outstanding invoices. Return only the numerical value.",
+  "Issue a full refund (refund amount equal to the invoice amount) for every overdue invoice of customer Birch whose amount exceeds 1000. Reply 'done'.": "For every invoice associated with customer Birch that is currently overdue and possesses a balance greater than 1000, process a complete reimbursement equivalent to the total invoice value. Respond with 'done'.",
+  "One issue has a comment containing the code 'zx22368'. Who (full name) is that issue's assignee? Answer with the name only.": "Could you please identify the full name of the individual assigned to the issue that features a comment with the code 'zx22368'? Please provide only the name in your response.",
+  "In repo 'beacon', which person is assigned the most open bug issues? Answer with the full name only (if tied, any tied person is fine).": "I need to know right away who has the highest number of unresolved bugs assigned to them within the 'beacon' repository. Please provide just their full name; if there's a tie, any of the names involved will work.",
+  "For each of the first 1 open issues (any label) in repo 'atlas' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": "Go through the very first 1 open issue in the 'atlas' repo (regardless of labels) following the tracker's sequence. DM the assignee with the issue id for each one, then just type 'done' once you're all set.",
+  "For each of the first 15 open issues (any label) in repo 'atlas' (in the order the tracker lists them), send the assignee a chat message that contains the issue id. Reply 'done' when finished.": "Please navigate to the 'atlas' repository and locate the initial 15 open issues, regardless of their labels. Following the specific sequence presented in the tracker, please transmit a chat message to the designated assignee for each one, ensuring the message includes the corresponding issue id. Once this process is complete, please respond with 'done'.",
+  "Roll back every failed deployment of service 'api' in the 'prod' environment. Reply 'done'.": "Please immediately undo all unsuccessful deployments for the 'api' service within the 'prod' environment. Just send back 'done' once it is finished.",
+  "Roll back every failed deployment of service 'worker' in the 'staging' environment. Reply 'done'.": "Revert all unsuccessful deployment attempts for the 'worker' service within the 'staging' environment and respond with 'done'.",
+  "Restock by exactly 50 units every SKU whose current stock is below 20. Reply 'done'.": "For any SKU with a current inventory level under 20, please increase the stock by a quantity of exactly 50 units. Respond with 'done' once completed.",
+  "Move every 'smb' segment CRM account currently in stage 'lead' to stage 'trial'. Reply 'done'.": "[ ] Update the status of all CRM accounts categorized as 'smb' segments from 'lead' to 'trial', then respond with 'done'.",
+  "For each open support ticket with priority 'high', email its assignee (use the email address from the HR record) with subject 'Ticket <ticket id>' and any body. Reply 'done'.": "Identify all active support tickets assigned a 'high' priority. For every such ticket, transmit an email to the designated assignee, retrieving the recipient's address from their corresponding HR record, utilizing 'Ticket <ticket id>' as the subject line and providing any text for the message body. Conclude by responding with 'done'.",
+  "Starting from person u006, follow manager links upward until you reach the person with no manager. How many managers are in the chain, not counting u006 themselves? Answer with the number only.": "Identify the sequence of managerial relationships beginning with u006 and ascending through each supervisor until the top-level individual is identified. Calculate the total count of managers within this hierarchy, excluding u006. Provide the result as a single integer.",
+  "Starting from person u012, follow manager links upward until you reach the person with no manager. How many managers are in the chain, not counting u012 themselves? Answer with the number only.": "Please trace the management hierarchy ascending from user u012 until the top-level individual without a supervisor is identified. Calculate the total quantity of managers within this reporting line, excluding u012. Provide the result as a single numeric value.",
+  "Starting from person u020, follow manager links upward until you reach the person with no manager. How many managers are in the chain, not counting u020 themselves? Answer with the number only.": "Trace the management hierarchy upwards beginning with individual u020, proceeding through each successive manager until a person without an assigned manager is identified. Determine the total count of managers within this lineage, excluding u020. Provide your response as a single integer.",
+  "One knowledge-base document contains the reference code 'qk35419'. Who is that document's author (full name)? Answer with the name only.": "I need to know right away who wrote the knowledge-base document associated with the reference code 'qk35419'. Please provide just the person's full name.",
+  "Append the text 'Reviewed' to every document tagged 'infra'. Reply 'done'.": "Can you go through all the docs with the 'infra' tag and add 'Reviewed' to the end of them? Just shoot me a 'done' once you're finished.",
+  "Append the text 'Reviewed' to every document tagged 'bug'. Reply 'done'.": "Can you add the word 'Reviewed' to the end of all docs with the 'bug' tag? Just shoot back a 'done' once you're finished.",
+  "For every member of the 'data' team, create a calendar event titled 'planning' on day 5 unless that person already has an event on day 5. Reply 'done'.": "1. Check the schedule for each individual in the 'data' team on day 5.\n2. If a person does not have a pre-existing entry for that day, schedule a new event named 'planning'.\n3. Respond with 'done'.",
+  "For every member of the 'platform' team, create a calendar event titled 'planning' on day 3 unless that person already has an event on day 3. Reply 'done'.": "Generate a 'planning' calendar entry for each individual assigned to the 'platform' team on day 3, provided no existing event is scheduled for them on that same day; respond with 'done' upon completion.",
+  "Set priority to 'high' on every open support ticket of customer Fjord that currently has priority 'low'. Reply 'done'.": "Update all currently open support tickets for customer Fjord that are marked with 'low' priority to 'high' priority. Once completed, respond with 'done'.",
+  "Find the unpaid invoice of customer Corvid with the largest amount. Then email the lead of the 'security' team (their email address, from HR) with subject 'Invoice <invoice id>' and any body. Reply 'done'.": "Identify Corvid's highest unpaid invoice. Message the security team lead (get their email via HR) using subject 'Invoice <invoice id>' and any content. Respond 'done'.",
+  "Find the unpaid invoice of customer Dunmore with the largest amount. Then email the lead of the 'growth' team (their email address, from HR) with subject 'Invoice <invoice id>' and any body. Reply 'done'.": "Identify the outstanding invoice for the client Dunmore that carries the highest monetary value. Once located, contact the individual serving as the lead for the 'growth' team by sending an email to the address provided by HR. The subject line must be formatted as 'Invoice <invoice id>' and the body may contain any content. Conclude the task by responding with 'done'.",
+  "One issue has a comment containing the code 'zx18558'. Who (full name) is that issue's assignee? Answer with the name only.": "Identify the full name of the person assigned to the issue that features the comment 'zx18558'. Provide only the name in your response.",
+  "Move every 'ent' segment CRM account currently in stage 'trial' to stage 'customer'. Reply 'done'.": "Please immediately update all CRM accounts that have 'ent' in their segment and are currently sitting in 'trial' stage by switching them over to 'customer' stage. Just send back 'done' once you've finished.",
+  "One knowledge-base document contains the reference code 'qk53617'. Who is that document's author (full name)? Answer with the name only.": "Identify the full name of the person who wrote the knowledge-base document referencing 'qk53617'. Provide the name as the sole response.",
+  "Set priority to 'high' on every open support ticket of customer Acme that currently has priority 'low'. Reply 'done'.": "Update all 'low' priority tickets for Acme that are still open to 'high' priority, then respond 'done'."
+ }
+}
