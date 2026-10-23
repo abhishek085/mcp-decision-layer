@@ -552,3 +552,17 @@ Caveats: n=55 rows from 31 unique paraphrased instructions; the paraphrase set i
 
 ## P2.10 — End-to-end: Gemma agent with the fine-tuned router as tool selector (running)
 Configs B/mcprouter and D/mcprouter/code (θ=0.05, hinted stubs, JSON fallback on, request_more_tools on, same 118 dev cells as E7.4/E7.5) → traces/p10_gemma_mcprouter_s012.jsonl. Router tokens counted with PREFIX-CACHED accounting (state once + each question ≈ 2K/task; raw gateway-reported ≈ 18K). Reference rows: C, D/oracle/code, D/llmq/code, D/spark_a/rules (E7.4/E7.5).
+
+### P2.10 results — Gemma agent + fine-tuned spark-s1-mcp-router-v3 (θ=0.05), 118 matched dev cells, hinted stubs (wall 1,358 s; table traces/p10_gemma_compare.txt)
+| config | success | agent tokens | router tokens (prefix-cached) | ΔU(tok) vs C, router tokens INCLUDED [95% CI] | ΔU(tok) vs C, router EXCLUDED |
+|---|---|---|---|---|---|
+| C | 0.864 | 4,255 | – | – | – |
+| D/oracle/code (gold subset) | 0.941 | 2,018 | – | +0.099 [+0.048,+0.159] | same |
+| D/llmq/code (Qwen-27B router, 1 call) | **0.966** | 2,577 | 909 | +0.109 [+0.048,+0.178] | +0.118 [+0.058,+0.186] |
+| **D/mcprouter/code (fine-tuned 4B router)** | 0.932 | 4,513 | 1,935 | **+0.046 [−0.047,+0.123]** | +0.065 [−0.023,+0.146] |
+| D/spark_a/rules (zero-shot spark-s1, OLD per-tool format) | 0.932 | 3,072 | 7,990 | −0.000 [−0.054,+0.061] | +0.080 [+0.025,+0.143] |
+| B/mcprouter (JSON, same subset) | 0.873 | – | – | −0.049 [−0.138,+0.042] | – |
+vs C: D/mcprouter/code success +0.068 [+0.017,+0.127] (significant); utility +0.046 (CI includes 0).
+Diagnosis of why the fine-tuned router does not beat the Qwen-prompted router end to end although it selects better: tool recall is HIGHER (mean 0.987 vs 0.966; complete 0.975 vs 0.950; exposed 2.57 vs 2.40 tools) so the router is not the cause. The success difference (0.932 vs 0.966 = 4 of 118 cells) sits in agent-side outcomes on a few families (bill_sum 0.50 vs 0.83, doc_append 0.67 vs 0.83, log_agg 0.67 vs 1.00, ticket_email 0.83 vs 1.00; doc_search 1.00 vs 0.67 the other way) — single-run noise at n=118; the agent-token difference (4.5K vs 2.6K) comes from a handful of long failing runs. D/mcprouter/code vs D/llmq/code is NOT statistically distinguishable here. When the router sees all gold tools, success is 0.948 (116 cells); the 3 incomplete-recall cells succeed only 0.33.
+Router cost: the 4B fine-tuned router needs 30 yes/no scores (prefix-cached accounting ≈ 1.9K tokens, ≈2.2 s per task in the gateway) vs ≈0.9K tokens/≈0.9 s for one 27B call — the 27B prompted router is cheaper in this accounting because it answers the whole task in one short generation; the 4B is better only if it is cheaper per token or the local 27B is unavailable. Raw gateway-reported tokens (no prefix cache) are ≈ 18K per task.
+Summary for the fine-tuned router (Gemma agent): captures about half of the oracle-subset gain with significance on success but not on utility. Honest limits: one run per cell; θ=0.05 chosen on dev; fine-tune data is a narrow 11-family distribution.
