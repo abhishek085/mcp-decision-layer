@@ -693,3 +693,18 @@ Reading: Nemotron is weak on these tasks in every config (success 0.38–0.64; p
 Findings: (1) **Code mode scales: C latency 3.6 → 5.6 → 6.3 s and 4.7K → 10K → 14K tokens from 42 to 2,000 tools; plain MCP is 9.8 → 22.1 s (164K tokens/task) at 200 tools and impossible at 2,000.** This is the cleanest H1 result of the study. (2) **D as implemented is pathological at scale**: when the router's tool list is complete (recall 1.0) D runs like C (4–6 s); when it misses a tool (recall 0.5–0.67; retrieval ceiling 0.65 / 0.44 at 200 / 2,000 tools) the code phase cannot finish, the fallback switches to JSON and the agent keeps calling `request_more_tools`, which adds the next 10 retrieved tools each time — real distractor tools carry long schemas, so schema tokens per turn grow to 20K (200 tools) and 59–77K (2,000 tools); up to 23 calls per task, 35 LLM calls, 900K tokens, 570 s. (3) Router cost at larger catalogs: 2.3 s (200) and 4.6 s (2,000; embedding 2,000 tool texts + 30 questions).
 Design flaw in my fallback (unbounded growth, no use of the `need` text, JSON mode over a growing exposed set) — NOT in the decision-layer idea. Fix to test next: on a subset miss, retry in CODE mode with search over the FULL catalog (C's scalable path), cap request_more_tools to 2 calls, then give up. Expected: D's worst case bounded near D + C.
 ## P3.5 — D fallback fix (policy `full_code`): on a subset miss retry in CODE mode with search over the FULL catalog (fresh 3-execution budget), then, only if that also fails, JSON over the subset with request_more_tools capped at 2 calls (5 tools per call). Re-running D/mcprouter/code on the same 10 tasks at 42 / 200 / 2,000 tools (traces/p12b_scale_qwen_fullcode_s0.jsonl). The earlier policy (`json_more`) stays as the baseline in all earlier results.
+
+### P3.5 results — D with the bounded fallback (policy full_code), Qwen agent, 10 tasks, serial (traces/p12b_scale_qwen_fullcode_s0.jsonl; traces/p12b_report.txt)
+| catalog | config | success | tokens / task | latency mean / median / p90 (s) | fallbacks / run |
+|---|---|---|---|---|---|
+| 42 | C | 1.00 | 4,677 | 3.6 / 3.6 / 5.9 | 0 |
+| 42 | D old fallback | 1.00 | 5,508 | 4.9 / 4.6 / 7.6 | 0 |
+| 42 | D new fallback | 1.00 | 5,508 | 5.0 / 4.7 / 7.7 | 0 |
+| 200 | C | 0.90 | 10,390 | 5.6 / 4.9 / 10.0 | 0 |
+| 200 | D old fallback | 0.80 | 66,008 | 24.4 / 6.4 / 98.9 | 0.3 |
+| 200 | **D new fallback** | **0.90** | **14,961** | **9.1 / 6.1 / 22.1** | 0.3 |
+| 2,000 | C | 0.90 | 14,255 | 6.3 / 5.0 / 11.3 | 0 |
+| 2,000 | D old fallback | 0.40 | 370,482 | 222.7 / 116.1 / 570.2 | 0.6 |
+| 2,000 | **D new fallback** | **0.90** | **34,490** | **16.1 / 16.4 / 34.0** | 0.7 |
+The bounded fallback removes the pathology: at 2,000 tools D goes 223 → 16 s (14×), 370K → 34K tokens (11×), success 0.40 → 0.90; at 200 tools 24.4 → 9.1 s, 66K → 15K tokens, 0.80 → 0.90. No change at 42 tools (the subset is complete). D still does not beat C on Qwen at any catalog size (C: 3.6 / 5.6 / 6.3 s; D new: 5.0 / 9.1 / 16.1 s), because (i) retrieval-limited tool recall forces the full-catalog retry in 30–70% of tasks at 200–2,000 tools, and (ii) the router itself costs 1.6 / 2.3 / 4.6 s. 10 tasks, one seed: read as a mechanism check, not a precise estimate. All earlier D results at 42 tools used the old policy (identical behaviour there).
+Lesson for the paper: any decision layer needs a BOUNDED, scalable fallback; an unbounded "ask for more tools" loop is the main way a decision layer can be far worse than not having one.

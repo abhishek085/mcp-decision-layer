@@ -1,0 +1,13 @@
+FIX_DONE
+ catalog config / fallback policy            n  succ   tokens lat mean  median     p90 fallbacks/run
+      42 C                                  10  1.00     4677      3.6     3.6     5.9          0.00
+      42 D old fallback (json + more tools) 10  1.00     5508      4.9     4.6     7.6          0.00
+      42 D new fallback (full-catalog code) 10  1.00     5508      5.0     4.7     7.7          0.00
+     200 C                                  10  0.90    10390      5.6     4.9    10.0          0.00
+     200 D old fallback (json + more tools) 10  0.80    66008     24.4     6.4    98.9          0.30
+     200 D new fallback (full-catalog code) 10  0.90    14961      9.1     6.1    22.1          0.30
+    2000 C                                  10  0.90    14255      6.3     5.0    11.3          0.00
+    2000 D old fallback (json + more tools) 10  0.40   370482    222.7   116.1   570.2          0.60
+    2000 D new fallback (full-catalog code) 10  0.90    34490     16.1    16.4    34.0          0.70
+
+[exited with code 0]
