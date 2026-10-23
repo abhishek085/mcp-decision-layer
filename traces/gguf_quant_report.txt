@@ -1,0 +1,16 @@
+== GGUF Q8_0: 79 tasks, 2370 candidate scores
+   logit correlation 0.9997 | mean |dP| 0.0006 | p99 |dP| 0.008 | max |dP| 0.185
+   th=0.01: decision agreement 0.9992 | complete-recall ref 1.000 vs gguf 1.000 | tools ref 2.81 vs gguf 2.78
+   th=0.05: decision agreement 0.9979 | complete-recall ref 0.975 vs gguf 0.975 | tools ref 2.57 vs gguf 2.51
+   th=0.3: decision agreement 1.0000 | complete-recall ref 0.949 vs gguf 0.949 | tools ref 2.34 vs gguf 2.34
+== GGUF Q4_K_M: 79 tasks, 2370 candidate scores
+   logit correlation 0.9950 | mean |dP| 0.0041 | p99 |dP| 0.104 | max |dP| 0.845
+   th=0.01: decision agreement 0.9928 | complete-recall ref 1.000 vs gguf 1.000 | tools ref 2.81 vs gguf 3.03
+   th=0.05: decision agreement 0.9962 | complete-recall ref 0.975 vs gguf 0.962 | tools ref 2.57 vs gguf 2.58
+   th=0.3: decision agreement 0.9945 | complete-recall ref 0.949 vs gguf 0.949 | tools ref 2.34 vs gguf 2.41
+bf16 safetensors via vLLM    router request time per task (30 candidates, serial): mean   1757 ms  median   1577  p90   1682
+GGUF BF16                    router request time per task (30 candidates, serial): mean  17903 ms  median  17945  p90  24012
+GGUF Q8_0                    router request time per task (30 candidates, serial): mean  11375 ms  median   8782  p90  18641
+GGUF Q4_K_M                  router request time per task (30 candidates, serial): mean   8181 ms  median   8243  p90   8527
+
+[exited with code 0]

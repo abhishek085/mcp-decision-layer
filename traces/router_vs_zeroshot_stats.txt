@@ -1,0 +1,10 @@
+Paired bootstrap (10,000 resamples), fine-tuned minus zero-shot spark-s1 v8, SAME tasks and candidate lists
+
+## template wording (79 dev tasks)
+  same threshold 0.01: complete-recall diff +0.101 [+0.038,+0.177]   tools-selected diff -0.48 [-0.72,-0.24]
+  same threshold 0.05: complete-recall diff +0.139 [+0.063,+0.215]   tools-selected diff +0.09 [-0.15,+0.34]
+  cheapest threshold reaching >=0.95 complete recall (theta, tools, recall): zero-shot (0.005, 4.075949367088608, 0.9873417721518988) | fine-tuned (0.1, 2.481012658227848, 0.9746835443037974)
+## Gemma-paraphrased wording (55 tasks)
+  same threshold 0.01: complete-recall diff +0.091 [+0.018,+0.182]   tools-selected diff -0.71 [-1.13,-0.31]
+  same threshold 0.05: complete-recall diff +0.109 [+0.036,+0.200]   tools-selected diff -0.07 [-0.42,+0.25]
+  cheapest threshold reaching >=0.95 complete recall (theta, tools, recall): zero-shot None | fine-tuned (0.1, 2.6363636363636362, 0.9636363636363636)
