@@ -490,3 +490,11 @@ Report: traces/toolsel2_zeroshot_n0_report.txt · raw traces/toolsel2_zeroshot_n
 | 0.2–0.5 | 0.797 | 0.895 | 2.1 | 0.3 |
 (old format E5.1: 0.949 at 16.2 tools, 0.846 at 8.4, 0.590 at 3.7). Unseen-tool tasks (hr/inventory/support/deployments) 1.000 complete recall at every threshold; seen families/tools 0.867 at θ=0.01; unseen families 0.90.
 **Consequence:** a large share of the "spark-s1 is a weak zero-shot tool selector" finding (E5.1, E7.4, Part I summary item 3) was an artifact of my per-tool question WITHOUT the candidate list in the state; with the list, zero-shot v8 reaches 100% complete recall at ~5 tools. The fine-tune must therefore beat this stronger baseline (target: ≥0.95 complete recall at ≤3 tools selected, robust to paraphrase and larger catalogs), otherwise it adds nothing. Part I statements about spark-s1 as selector should be read with this correction. Caveats: thresholds chosen on the same 79 tasks; dev tasks are template-worded (Gemma-paraphrased dev tasks still to build); 42-tool catalog (200/2,000 runs below).
+
+### P2.3b — zero-shot spark-s1 (new format) at 200 and 2,000 tools (traces/toolsel2_zeroshot_n158.jsonl, n1958.jsonl; bge-small top-30 candidates)
+| catalog | P(all gold tools inside embedding top-30) = retrieval ceiling | router complete-recall at θ=0.002 | tools selected |
+|---|---|---|---|
+| 42 | 1.000 | 1.000 | 5.1 |
+| 200 | 0.646 | 0.646 | 5.3 |
+| 2,000 | 0.443 | 0.443 | 6.0 |
+The router's recall EQUALS the candidate-generation ceiling at every size: the classifier never misses a tool that is in its candidate list. The loss at scale is entirely the embedding stage (bge-small top-30), which drops generic "enabling" tools: post_message (12 tasks), lookup_user (10), list_docs, list_team, get_person, read_file. So at 200+ tools the lever is the candidate generator (larger k, hybrid/ BM25+embedding, tool-name priors, server-level pruning), not the classifier. A fine-tune can still cut extras and make low thresholds usable, but cannot fix the ceiling.
