@@ -1,0 +1,135 @@
+{
+ "list_issues": [],
+ "get_issue": [
+  {
+   "name": "fetch_issue_details",
+   "description": "Retrieve an issue by unique identifier, including all associated comments."
+  },
+  {
+   "name": "load_issue_by_id",
+   "description": "Fetch a specific issue record together with its complete comment thread."
+  },
+  {
+   "name": "obtain_issue_record",
+   "description": "Get issue data using its ID, with all related commentary included."
+  }
+ ],
+ "update_issue": [
+  {
+   "name": "issue_state_assignee_changer",
+   "description": "Change issue status or assignee using the issue's ID."
+  }
+ ],
+ "add_comment": [
+  {
+   "name": "add_issue_note",
+   "description": "Append comment text to specific issue within project management system."
+  }
+ ],
+ "search_comments": [
+  {
+   "name": "comment_query_engine",
+   "description": "Performs a substring search in issue remarks and delivers the set of associated issue keys."
+  }
+ ],
+ "lookup_user": [],
+ "find_user_by_name": [
+  {
+   "name": "lookup_user_by_fullname",
+   "description": "Retrieve a user profile using their complete display name from the system."
+  },
+  {
+   "name": "search_user_by_full_name",
+   "description": "Locate a user account by searching the database for an exact full name match."
+  }
+ ],
+ "post_message": [
+  {
+   "name": "direct_chat_sender",
+   "description": "Deliver a private message to a user ID."
+  },
+  {
+   "name": "user_message_broker",
+   "description": "Transmit a chat message directly to a user identifier."
+  },
+  {
+   "name": "personal_notification_sender",
+   "description": "Dispatch a one-to-one message to the specified recipient."
+  }
+ ],
+ "list_messages": [],
+ "query_logs": [
+  {
+   "name": "log_fetch",
+   "description": "Retrieve raw log entries filtered by service and log level with pagination up to 500 items."
+  }
+ ],
+ "aggregate_logs": [
+  {
+   "name": "log_aggregator",
+   "description": "Counts log lines by service or level, optionally limited to a specific level."
+  },
+  {
+   "name": "event_catalog",
+   "description": "Aggregates logs by service or level, with filter to include only one level."
+  }
+ ],
+ "list_invoices": [],
+ "get_invoice": [],
+ "issue_refund": [],
+ "list_docs": [],
+ "search_docs": [
+  {
+   "name": "docsearch",
+   "description": "Full-text search of document titles and bodies, returning matching document identifiers and titles."
+  },
+  {
+   "name": "doc_finder",
+   "description": "Performs full-text search on document titles and bodies, returning relevant document IDs and titles."
+  }
+ ],
+ "read_doc": [],
+ "append_doc": [
+  {
+   "name": "extend_doc",
+   "description": "Add extra content to document end using target_path and insertion_text parameters."
+  },
+  {
+   "name": "append_segment",
+   "description": "Attach new text to existing file via path and data arguments for seamless extension."
+  }
+ ],
+ "list_events": [],
+ "create_event": [],
+ "list_emails": [
+  {
+   "name": "fetch_user_messages",
+   "description": "Retrieve a user's inbox messages, including subject and body content."
+  }
+ ],
+ "send_email": [],
+ "query_accounts": [
+  {
+   "name": "account_segment_lookup",
+   "description": "Fetch accounts segmented by business size and stage (lead, trial, customer, churned), with pagination limit of 100 entries per request."
+  },
+  {
+   "name": "sales_account_filter",
+   "description": "Query accounts by size category (smb, mid, enterprise) and stage (lead, trial, customer, churned), with max 100 results per page."
+  }
+ ],
+ "get_account": [],
+ "update_account": [
+  {
+   "name": "crm_account_update",
+   "description": "Update account stage and owner ID via CRM identifier fields."
+  },
+  {
+   "name": "user_account_stage_owner_modify",
+   "description": "Modify stage and owner for CRM account using account identifier."
+  }
+ ],
+ "list_files": [],
+ "read_file": [],
+ "write_file": []
+}

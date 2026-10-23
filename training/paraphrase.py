@@ -1,6 +1,7 @@
 """Nemotron (TRAIN writer) rewrites task instructions; a deterministic slot check keeps only rewrites that preserve every id/number/name/quoted value."""
 import json, re, sys, math, random, concurrent.futures as cf
 from openai import OpenAI
+import logging; logging.disable(logging.INFO)
 C = OpenAI(base_url="http://localhost:8003/v1", api_key="x", timeout=300)
 STYLES = ["a terse chat message", "a polite email request", "a ticket written by a busy manager", "a casual Slack message", "a formal operations request", "a step-by-step checklist item",
           "an urgent message from a non-technical colleague", "a precise technical instruction"]
@@ -21,10 +22,11 @@ def one(args):
     rng = random.Random(f"{seed}-{row['instruction']}")
     out = []
     for style in rng.sample(STYLES, min(k, len(STYLES))):
-        prompt = (f"Rewrite the following request as {style}. Keep EXACTLY the same meaning and the same required actions. Every identifier, number, name and quoted value "
-                  f"must be copied exactly as written. Do not add new requirements and do not explain. Output only the rewritten request.\n\nRequest: {row['instruction']}")
+        prompt = (f"Rewrite the request below COMPLETELY IN YOUR OWN WORDS as {style}. Change the sentence structure and the vocabulary; do not just add a prefix, a label or a greeting "
+                  f"to the original sentence. Keep EXACTLY the same meaning, the same required actions and any required answer format (for example 'name only' or 'reply done'). "
+                  f"Every identifier, number, name and quoted value must be copied exactly as written. Do not add new requirements and do not explain. Output only the rewritten request.\n\nRequest: {row['instruction']}")
         try:
-            r = C.chat.completions.create(model="nemotron", messages=[{"role": "user", "content": prompt}], temperature=0.9, top_p=0.95, max_tokens=300,
+            r = C.chat.completions.create(model="nemotron", messages=[{"role": "user", "content": prompt}], temperature=1.0, top_p=0.95, max_tokens=300,
                                           extra_body={"chat_template_kwargs": {"enable_thinking": False}})
             t = (r.choices[0].message.content or "").strip().strip('"')
         except Exception as e:

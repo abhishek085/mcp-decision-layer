@@ -1,0 +1,465 @@
+{
+ "list_issues": {
+  "original": "List issues in a repo (atlas|beacon|cinder), optionally filtered by state (open|closed) and label (bug|feature|docs|infra). Paged; returns id,title,state,label,assignee,description.",
+  "aliases": [
+   {
+    "name": "issue_tracker",
+    "description": "Retrieves repository issues filtered by state and label"
+   },
+   {
+    "name": "ticket_fetcher",
+    "description": "Fetches tickets filtered by status and category in a repository"
+   },
+   {
+    "name": "bugtracker_service",
+    "description": "Lists tickets filtered by state and tag within a repo"
+   }
+  ]
+ },
+ "get_issue": {
+  "original": "Get one issue by id, including its comments.",
+  "aliases": [
+   {
+    "name": "fetch_issue_details",
+    "description": "Retrieve an issue by unique identifier, including all associated comments."
+   },
+   {
+    "name": "load_issue_by_id",
+    "description": "Fetch a specific issue record together with its complete comment thread."
+   },
+   {
+    "name": "obtain_issue_record",
+    "description": "Get issue data using its ID, with all related commentary included."
+   }
+  ]
+ },
+ "update_issue": {
+  "original": "Update an issue's state (open|closed) and/or assignee (user id).",
+  "aliases": [
+   {
+    "name": "issue_modifier",
+    "description": "Modify an issue's state and assignee using its identifier."
+   },
+   {
+    "name": "state_assignee_updater",
+    "description": "Alter issue status and assign user via issue identifier."
+   },
+   {
+    "name": "issue_state_assignee_changer",
+    "description": "Change issue status or assignee using the issue's ID."
+   }
+  ]
+ },
+ "add_comment": {
+  "original": "Add a comment to an issue.",
+  "aliases": [
+   {
+    "name": "add_issue_note",
+    "description": "Append comment text to specific issue within project management system."
+   },
+   {
+    "name": "issue_add_remark",
+    "description": "Insert comment into issue record using identifier and project context."
+   },
+   {
+    "name": "issue_comment_append",
+    "description": "Add remark to issue description using comment parameter and issue identifier."
+   }
+  ]
+ },
+ "search_comments": {
+  "original": "Search issue comments for a substring; returns matching issue ids.",
+  "aliases": [
+   {
+    "name": "issue_comment_scanner",
+    "description": "Searches issue comment archives for a given phrase and returns matching issue identifiers."
+   },
+   {
+    "name": "comment_text_finder",
+    "description": "Scans comment content across issues for substring matches and outputs relevant issue IDs."
+   },
+   {
+    "name": "comment_query_engine",
+    "description": "Performs a substring search in issue remarks and delivers the set of associated issue keys."
+   }
+  ]
+ },
+ "lookup_user": {
+  "original": "Look up a chat user by user id (e.g. u012); returns id and name.",
+  "aliases": [
+   {
+    "name": "get_chat_member",
+    "description": "Fetch user details by ID, returning user ID and display name."
+   },
+   {
+    "name": "user_resolver",
+    "description": "Identify a chat participant using their identifier and retrieve their name."
+   },
+   {
+    "name": "client_query",
+    "description": "Retrieve user profile data given a numeric or alphanumeric ID token."
+   }
+  ]
+ },
+ "find_user_by_name": {
+  "original": "Find a chat user by full name.",
+  "aliases": [
+   {
+    "name": "lookup_user_by_fullname",
+    "description": "Retrieve a user profile using their complete display name from the system."
+   },
+   {
+    "name": "get_user_by_name",
+    "description": "Find a user record based on their exact full name matching provided input."
+   },
+   {
+    "name": "search_user_by_full_name",
+    "description": "Locate a user account by searching the database for an exact full name match."
+   }
+  ]
+ },
+ "post_message": {
+  "original": "Send a direct chat message to a user id.",
+  "aliases": [
+   {
+    "name": "direct_chat_sender",
+    "description": "Deliver a private message to a user ID."
+   },
+   {
+    "name": "user_message_broker",
+    "description": "Transmit a chat message directly to a user identifier."
+   },
+   {
+    "name": "personal_notification_sender",
+    "description": "Dispatch a one-to-one message to the specified recipient."
+   }
+  ]
+ },
+ "list_messages": {
+  "original": "List messages previously sent to a user.",
+  "aliases": [
+   {
+    "name": "retrieve_user_messages",
+    "description": "List user's previously received messages with optional timestamp, message_id, and status filters."
+   },
+   {
+    "name": "fetch_past_notifications",
+    "description": "Retrieve all sent notifications for a user filtered by type, date range, and severity."
+   },
+   {
+    "name": "get_recent_communications",
+    "description": "Show the user's historic messages filtered by message_id, recipient, and date."
+   }
+  ]
+ },
+ "query_logs": {
+  "original": "Return raw log lines (ts,service,level,msg) filtered by service (api|auth|billing|search|worker) and level (INFO|WARN|ERROR). Paged, max 500 per call.",
+  "aliases": [
+   {
+    "name": "log_fetch",
+    "description": "Retrieve raw log entries filtered by service and log level with pagination up to 500 items."
+   },
+   {
+    "name": "event_viewer",
+    "description": "Fetch raw log lines across services and severity, supporting limit and offset parameters."
+   },
+   {
+    "name": "log_scanner",
+    "description": "Extract unprocessed log records filtered by component and severity, paginated with a max of 500 entries."
+   }
+  ]
+ },
+ "aggregate_logs": {
+  "original": "Server-side count of log lines grouped by 'service' or 'level', optionally restricted to a level.",
+  "aliases": [
+   {
+    "name": "log_aggregator",
+    "description": "Counts log lines by service or level, optionally limited to a specific level."
+   },
+   {
+    "name": "event_catalog",
+    "description": "Aggregates logs by service or level, with filter to include only one level."
+   },
+   {
+    "name": "raw_log_inspector",
+    "description": "Groups log entries by service or level, optionally restricting to a given level."
+   }
+  ]
+ },
+ "list_invoices": {
+  "original": "List invoices (id,customer,amount,status,refunded) filtered by customer and status (paid|unpaid|overdue). Paged, max 100.",
+  "aliases": []
+ },
+ "get_invoice": {
+  "original": "Get one invoice.",
+  "aliases": [
+   {
+    "name": "retrieve_bill",
+    "description": "Fetch a single invoice by its unique ID and any filter criteria provided."
+   },
+   {
+    "name": "load_billing_record",
+    "description": "Retrieve one billing statement using specified identifiers and optional filter parameters."
+   },
+   {
+    "name": "obtain_invoice_doc",
+    "description": "Get a single invoice document based on given parameters and filtering options."
+   }
+  ]
+ },
+ "issue_refund": {
+  "original": "Refund an amount against an invoice.",
+  "aliases": [
+   {
+    "name": "refund_invoice_payment",
+    "description": "Refund an amount against an invoice with filters for invoice_id, amount, and created_date."
+   },
+   {
+    "name": "invoice_credit_balance",
+    "description": "Adjust or credit a payment toward an invoice using amount, customer_id, and status filters."
+   },
+   {
+    "name": "payment_reversal",
+    "description": "Revoke or reverse a payment on an invoice with filters for payment_id, invoice_id, and reversal_date."
+   }
+  ]
+ },
+ "list_docs": {
+  "original": "List knowledge-base documents (id,title,author,tags) without bodies. Paged, max 100.",
+  "aliases": [
+   {
+    "name": "document_index",
+    "description": "Retrieve paginated knowledge-base entries (id,title,author,tags) with filtering options."
+   },
+   {
+    "name": "knowledge_list",
+    "description": "Fetch searchable document records (id,title,author,tags) supporting pagination and filters."
+   },
+   {
+    "name": "metadata_registry",
+    "description": "Access paginated knowledge-base metadata (id,title,author,tags) with configurable limits."
+   }
+  ]
+ },
+ "search_docs": {
+  "original": "Full-text search over document titles and bodies; returns matching doc ids and titles.",
+  "aliases": [
+   {
+    "name": "docsearch",
+    "description": "Full-text search of document titles and bodies, returning matching document identifiers and titles."
+   },
+   {
+    "name": "content_locator",
+    "description": "Searches document titles and bodies for input terms, outputting matching identifiers and titles."
+   },
+   {
+    "name": "doc_finder",
+    "description": "Performs full-text search on document titles and bodies, returning relevant document IDs and titles."
+   }
+  ]
+ },
+ "read_doc": {
+  "original": "Read the full text of a document.",
+  "aliases": [
+   {
+    "name": "document_reader",
+    "description": "Extract full document text with optional filters like encoding, delimiters, or section boundaries."
+   },
+   {
+    "name": "text_extractor",
+    "description": "Load and return entire document content, supporting parameters for encoding, segmentation, or delimiter handling."
+   },
+   {
+    "name": "file_text_loader",
+    "description": "Retrieve complete file contents using options for encoding, paragraph splitting, or delimiter specifications."
+   }
+  ]
+ },
+ "append_doc": {
+  "original": "Append text to the end of a document.",
+  "aliases": [
+   {
+    "name": "extend_doc",
+    "description": "Add extra content to document end using target_path and insertion_text parameters."
+   },
+   {
+    "name": "append_segment",
+    "description": "Attach new text to existing file via path and data arguments for seamless extension."
+   },
+   {
+    "name": "concat_content",
+    "description": "Merge additional text into file specified by target_file using separator and payload fields."
+   }
+  ]
+ },
+ "list_events": {
+  "original": "List calendar events (user,day,title) for a user, optionally on a given day (1-10).",
+  "aliases": [
+   {
+    "name": "retrieve_user_schedule",
+    "description": "Retrieve user calendar events by user identifier, day, and event title."
+   },
+   {
+    "name": "fetch_agenda_entries",
+    "description": "Fetch agenda items filtered by user, optional day, and event title parameters."
+   },
+   {
+    "name": "access_calendar_items",
+    "description": "Access calendar entries for a user, with filters for day and title."
+   }
+  ]
+ },
+ "create_event": {
+  "original": "Create a calendar event for a user on a day (1-10).",
+  "aliases": [
+   {
+    "name": "plan_appointment",
+    "description": "Create a calendar appointment for a user on a chosen day (1-10)."
+   },
+   {
+    "name": "schedule_meeting",
+    "description": "Set up a user's calendar meeting for a selected day (1-10)."
+   },
+   {
+    "name": "book_date_slot",
+    "description": "Add a user's calendar date entry on a day (1-10)."
+   }
+  ]
+ },
+ "list_emails": {
+  "original": "List inbox emails (subject, body) of a user.",
+  "aliases": [
+   {
+    "name": "fetch_user_messages",
+    "description": "Retrieve a user's inbox messages, including subject and body content."
+   },
+   {
+    "name": "retrieve_email_archive",
+    "description": "Fetch all inbox emails for a user, providing subject and body details."
+   },
+   {
+    "name": "download_saved_messages",
+    "description": "Access a user's inbox emails with subject and body via available download options."
+   }
+  ]
+ },
+ "send_email": {
+  "original": "Send an email to an address.",
+  "aliases": [
+   {
+    "name": "transmit_message",
+    "description": "Deliver email to recipient with optional subject and body content."
+   },
+   {
+    "name": "dispatch_notification",
+    "description": "Send email notification to recipient using configured SMTP settings."
+   },
+   {
+    "name": "push_email",
+    "description": "Transmit email message to address with subject and body content."
+   }
+  ]
+ },
+ "query_accounts": {
+  "original": "Query CRM accounts by segment (smb|mid|ent) and stage (lead|trial|customer|churned). Paged, max 100.",
+  "aliases": [
+   {
+    "name": "crm_account_query",
+    "description": "Retrieve CRM accounts filtered by segment (small, medium, enterprise) and lifecycle stage (lead, trial, customer, churned), supporting pagination up to 100 records."
+   },
+   {
+    "name": "account_segment_lookup",
+    "description": "Fetch accounts segmented by business size and stage (lead, trial, customer, churned), with pagination limit of 100 entries per request."
+   },
+   {
+    "name": "sales_account_filter",
+    "description": "Query accounts by size category (smb, mid, enterprise) and stage (lead, trial, customer, churned), with max 100 results per page."
+   }
+  ]
+ },
+ "get_account": {
+  "original": "Get one CRM account.",
+  "aliases": [
+   {
+    "name": "fetch_crm_account",
+    "description": "Retrieve a single CRM account by ID or name using optional filter parameters."
+   },
+   {
+    "name": "retrieve_customer_record",
+    "description": "Obtain one customer record from your CRM with optional attribute filtering."
+   },
+   {
+    "name": "locate_account_details",
+    "description": "Fetch one customer account from CRM by specifying criteria like status or region."
+   }
+  ]
+ },
+ "update_account": {
+  "original": "Update a CRM account's stage and/or owner (user id).",
+  "aliases": [
+   {
+    "name": "crm_account_update",
+    "description": "Update account stage and owner ID via CRM identifier fields."
+   },
+   {
+    "name": "user_account_stage_owner_modify",
+    "description": "Modify stage and owner for CRM account using account identifier."
+   },
+   {
+    "name": "account_stage_owner_manager",
+    "description": "Adjust account's stage and manager ID within the CRM system."
+   }
+  ]
+ },
+ "list_files": {
+  "original": "List file paths starting with a prefix (e.g. 'reports/q1').",
+  "aliases": [
+   {
+    "name": "dir_list",
+    "description": "Returns all file paths matching a directory prefix filter."
+   },
+   {
+    "name": "path_filter",
+    "description": "Retrieves all files under a specified directory prefix."
+   },
+   {
+    "name": "glob_finder",
+    "description": "Finds all file paths starting with a given directory prefix."
+   }
+  ]
+ },
+ "read_file": {
+  "original": "Read a text file.",
+  "aliases": [
+   {
+    "name": "extract_from_file",
+    "description": "Read and extract content from a text file."
+   },
+   {
+    "name": "load_text_document",
+    "description": "Load the contents of a text file for processing."
+   },
+   {
+    "name": "fetch_file_text",
+    "description": "Retrieve the text from a specified file."
+   }
+  ]
+ },
+ "write_file": {
+  "original": "Write a text file.",
+  "aliases": [
+   {
+    "name": "save_text_document",
+    "description": "Create a new file with specified content and optional encoding, mode, and overwrite flags."
+   },
+   {
+    "name": "output_text_file",
+    "description": "Append or replace content in a file, supporting mode, encoding, and atomic writes."
+   },
+   {
+    "name": "register_output_file",
+    "description": "Generate a persistent file from streamed data, with buffering, permissions, and encoding controls."
+   }
+  ]
+ }
+}

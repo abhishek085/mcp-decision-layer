@@ -5,18 +5,19 @@ sys.path.insert(0, ".")
 from openai import OpenAI
 from bench.toolsel import catalog
 from training.train_tasks import HELDOUT_TOOLS
+import logging; logging.disable(logging.INFO)
 C = OpenAI(base_url="http://localhost:8003/v1", api_key="x", timeout=300)
 tools = [t for t in catalog(0) if t["name"] not in HELDOUT_TOOLS]
 out = {}
 for t in tools:
-    p = (f"A software tool is named '{t['name']}' with description: \"{t['description']}\".\nWrite 3 DIFFERENT alternative definitions of the SAME tool as another vendor might document it. "
-         "Each has a snake_case name that does not reuse the original name's words where possible and a one-sentence description (max 25 words) of the same function and the same filters/arguments. "
+    p = (f"A software tool is named '{t['name']}' with description: \"{t['description']}\".\nWrite 6 DIFFERENT alternative definitions of the SAME tool as another vendor might document it. "
+         "Each has a snake_case name that does not reuse the original name's words where possible and a one-sentence description (max 30 words) of exactly the same function, including the same filters/arguments and the same kind of returned data; do not make it broader or narrower. "
          "Reply with JSON only: [{\"name\": ..., \"description\": ...}, ...]")
-    r = C.chat.completions.create(model="nemotron", messages=[{"role": "user", "content": p}], temperature=0.8, max_tokens=500, extra_body={"chat_template_kwargs": {"enable_thinking": False}})
+    r = C.chat.completions.create(model="nemotron", messages=[{"role": "user", "content": p}], temperature=0.8, max_tokens=900, extra_body={"chat_template_kwargs": {"enable_thinking": False}})
     try:
         alts = json.loads(re.search(r"\[.*\]", r.choices[0].message.content, re.S).group(0))
         alts = [a for a in alts if re.fullmatch(r"[a-z][a-z0-9_]{3,40}", a.get("name", "")) and a.get("description")]
     except Exception: alts = []
-    out[t["name"]] = dict(original=t["description"], aliases=alts[:3])
+    out[t["name"]] = dict(original=t["description"], aliases=alts[:6])
     print(t["name"], [a["name"] for a in out[t["name"]]["aliases"]], flush=True)
-json.dump(out, open("training/data/aliases_raw.json", "w"), indent=1)
+json.dump(out, open("training/data/aliases_raw_v2.json", "w"), indent=1)
