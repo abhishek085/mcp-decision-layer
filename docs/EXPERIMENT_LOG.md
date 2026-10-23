@@ -677,3 +677,18 @@ Infra (P3.3): the Nemotron container used for the serial pass had been re-create
 Paired vs C: A success −0.179 [−0.359,0.000], U(λl .002) −0.889 [−1.235,−0.572]; B success +0.026 [−0.21,+0.26]; D/mcprouter success +0.077 [−0.128,+0.282], latency −0.98 s [−6.3,+3.6], U +0.036 [−0.175,+0.246] (n.s.); D/oracle latency −5.11 s [−11.4,+0.31], U(λl .002) +0.089 [−0.124,+0.293], U(λl .02) +0.181 [−0.094,+0.484] (n.s.).
 Reading: Nemotron is weak on these tasks in every config (success 0.38–0.64; plain MCP worst: long raw-log paging tasks need >64K tokens — A re-run on logscan-api used 269K tokens and still failed). D/mcprouter has the best success (0.64 vs C 0.56) and similar latency, but n=39 and the CIs include 0 everywhere except A's utility loss. Direction is consistent with Gemma (decision layer helps a weaker agent), not statistically established. Infra: 5 cells had to be re-run after a context-limit mis-configuration (see P3.3 note above).
 ## P3.4 — Scale arm (running next): Qwen, 10 tasks, A / C / D(mcprouter), 200 and 2,000 tools, serial.
+
+### P3.4 results — Scale arm, Qwen agent, serial, 10 tasks (seed 0), hinted stubs, catalogs 42 / 200 / 2,000 tools (traces/p12_scale_qwen_s0.jsonl + p11 for 42 tools; report traces/p12_scale_report.txt). GPU ran at ~95% of peak clock with the SoC at 90–95 °C during the plain-MCP-at-200-tools phase, so A@200 latencies are slightly pessimistic.
+| catalog | config | success | tokens / task | latency mean / median / p90 (s) | router s |
+|---|---|---|---|---|---|
+| 42 | A | 0.90 | 87,460 | 9.8 / 4.8 / 60.6 | – |
+| 42 | C | 1.00 | 4,677 | 3.6 / 3.6 / 5.9 | – |
+| 42 | D/mcprouter | 1.00 | 5,508 | 4.9 / 4.6 / 7.6 | 1.6 |
+| 200 | A | 0.90 | 163,969 | 22.1 / 31.3 / 39.2 | – |
+| 200 | C | 0.90 | 10,390 | **5.6 / 4.9 / 10.0** | – |
+| 200 | D/mcprouter | 0.80 | 66,008 | 24.4 / 6.4 / **98.9** | 2.3 |
+| 2,000 | A | **0.00 (context overflow, 10/10)** | – | – | – |
+| 2,000 | C | 0.90 | 14,255 | **6.3 / 5.0 / 11.3** | – |
+| 2,000 | D/mcprouter | **0.40** | **370,482** | **222.7 / 116.1 / 570.2** | 4.6 |
+Findings: (1) **Code mode scales: C latency 3.6 → 5.6 → 6.3 s and 4.7K → 10K → 14K tokens from 42 to 2,000 tools; plain MCP is 9.8 → 22.1 s (164K tokens/task) at 200 tools and impossible at 2,000.** This is the cleanest H1 result of the study. (2) **D as implemented is pathological at scale**: when the router's tool list is complete (recall 1.0) D runs like C (4–6 s); when it misses a tool (recall 0.5–0.67; retrieval ceiling 0.65 / 0.44 at 200 / 2,000 tools) the code phase cannot finish, the fallback switches to JSON and the agent keeps calling `request_more_tools`, which adds the next 10 retrieved tools each time — real distractor tools carry long schemas, so schema tokens per turn grow to 20K (200 tools) and 59–77K (2,000 tools); up to 23 calls per task, 35 LLM calls, 900K tokens, 570 s. (3) Router cost at larger catalogs: 2.3 s (200) and 4.6 s (2,000; embedding 2,000 tool texts + 30 questions).
+Design flaw in my fallback (unbounded growth, no use of the `need` text, JSON mode over a growing exposed set) — NOT in the decision-layer idea. Fix to test next: on a subset miss, retry in CODE mode with search over the FULL catalog (C's scalable path), cap request_more_tools to 2 calls, then give up. Expected: D's worst case bounded near D + C.

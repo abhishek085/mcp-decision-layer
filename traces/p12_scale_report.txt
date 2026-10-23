@@ -1,0 +1,11 @@
+scale arm, Qwen agent, serial, tasks: 10
+ catalog config              n  succ ctx-overflow   tokens lat mean  median    p90 router s
+      42 A                  10  0.90            0    87460      9.8     4.8   60.6      0.0  errors=0
+      42 C                  10  1.00            0     4677      3.6     3.6    5.9      0.0  errors=0
+      42 D/mcprouter/code   10  1.00            0     5508      4.9     4.6    7.6      1.6  errors=0
+     200 A                  10  0.90            0   163969     22.1    31.3   39.2      0.0  errors=0
+     200 C                  10  0.90            0    10390      5.6     4.9   10.0      0.0  errors=0
+     200 D/mcprouter/code   10  0.80            0    66008     24.4     6.4   98.9      2.3  errors=0
+    2000 A                  10  0.00           10        0      0.2     0.2    0.2      0.0  errors=0
+    2000 C                  10  0.90            0    14255      6.3     5.0   11.3      0.0  errors=0
+    2000 D/mcprouter/code   10  0.40            0   370482    222.7   116.1  570.2      4.6  errors=0
