@@ -53,3 +53,26 @@ Fine-tuning (plan Phases 9-10) is a large GPU job. The evidence points to a **to
 **End to end (hinted stubs, dev cells).** Gemma agent + code mode + this router: success 0.932 vs 0.864 for code mode alone (+6.8 pp, CI [+1.7,+12.7]); utility +0.046 (CI [-0.047,+0.123], not significant). The prompted Qwen-27B router did better (0.966, utility +0.109) though the fine-tuned router's tool recall is higher (0.987 vs 0.966) - the gap is agent-side noise at n=118. Qwen agent: ties code mode alone (0.966 vs 0.975), as every decision-layer variant does.
 
 **Open items.** Regression check of v8 skills (running), NVFP4 quantisation of the router, re-test of the router against the "ALWAYS select me" poisoned-description attack, a broader/harder training distribution (the 11-family template data makes the model near-perfect in distribution), a better candidate generator for large catalogs, and the sealed test set.
+
+---
+# Part III - latency-inclusive results of the main study (clean serial runs, 2026-10-23)
+
+All numbers: concurrency 1, nothing else generating, hinted stubs, thinking off, seed-0 dev world, mock tools (~0 ms; real MCP servers add network time per call, which favours scripts). Tokens include router tokens (prefix-cached accounting). Medians/trimmed means are reported because Gemma has rare runaway runs (one 683 s run).
+
+| 42 tools, 39 tasks | Qwen3.8-27B succ / median s / p90 s | Gemma-4-26B succ / median / p90 | Nemotron-3-Nano succ / median / p90 |
+|---|---|---|---|
+| A plain MCP | 0.82 / 5.0 / 15.6 | 0.82 / 5.8 / 21.0 | 0.38 / 6.4 / 22.9 |
+| B fine-tuned router + JSON | 0.85 / 5.7 / 12.7 | 0.87 / 7.9 / 18.9 | 0.59 / 6.2 / 22.3 |
+| C code mode | **0.97 / 3.7 / 5.9** | 0.79 / 6.6 / **33.9** | 0.56 / 4.5 / 29.3 |
+| D fine-tuned router + code | 0.95 / 4.6 / 6.8 | **0.90** / 7.4 / 21.4 | **0.64** / 5.5 / 35.1 |
+| D oracle tool list (free router) | 0.97 / **3.0** / 4.8 | 0.90 / 7.5 / 19.3 | 0.64 / **3.6** / 21.9 |
+
+Scale arm (Qwen, 10 tasks): code mode 3.6 -> 5.6 -> 6.3 s from 42 -> 200 -> 2,000 tools (4.7K -> 10K -> 14K tokens); plain MCP 9.8 -> 22.1 s (164K tokens) at 200 tools and impossible at 2,000 (context overflow); D with an unbounded "request more tools" fallback collapsed at scale (223 s, 370K tokens, success 0.40 at 2,000 tools) and with a bounded full-catalog-code fallback is 5.0 / 9.1 / 16.1 s with success 1.0 / 0.9 / 0.9.
+
+**What the latency data says.**
+1. Code mode is the latency winner for the strong coder (Qwen) and its advantage over plain MCP grows with the catalog (2.7x at 42 tools, ~4x at 200, unbounded at 2,000).
+2. A decision layer pays a router cost (1.6 s at 42 tools, 2.3 s at 200, 4.6 s at 2,000: ~50 ms per candidate question). With a perfect free router D is faster than C (Qwen -0.7 s [-1.0,-0.5]); with the real router it is slower on Qwen (+2.2 s). Break-even router cost on Qwen is ~0.7 s; a single-pass scorer (not built) is the way to get there.
+3. For code-weak agents (Gemma, Nemotron) the decision layer improves success (0.79 -> 0.90, 0.56 -> 0.64; CIs include 0 on this 39-task latency set, significant in the larger 118-cell Gemma set) and trims the latency tail; typical latency is unchanged.
+4. A decision layer needs a bounded, scalable fallback; the unbounded one was 14x slower than the bounded one at 2,000 tools.
+
+**Thesis, current form.** Code mode is the main effect (accuracy, tokens and latency, growing with catalog size). A decision layer adds value only for agents whose own code mode is weak, and only with a small accurate tool list, a bounded fallback and a router whose cost is below the agent time it saves. spark-s1 fine-tuned as a tool router beats its zero-shot self on recall at equal or fewer tools, but is not faster than prompting a large model for the same decision on this hardware.
