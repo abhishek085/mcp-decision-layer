@@ -19,3 +19,8 @@ nohup.out
 *.bin
 .claude/
 worlds/distractors_raw/
+# generated training records / checkpoints (reproducible from training/*.py + the small verified source files)
+training/data/mcp_router_*.jsonl
+training/ckpt/
+training/data/*.out
+training/data/*.pid
