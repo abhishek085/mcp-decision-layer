@@ -1,0 +1,26 @@
+39 tasks common to 5 configs: ['A', 'B/mcprouter', 'C', 'D/mcprouter/code', 'D/oracle/code']
+
+config              succ  tokens lat mean  median    p90  | LLM router sandbox  tool | U(tok+.002s) U(tok+.02s)
+A                   0.38   78714     10.2     6.4   22.9   10.1    0.0     0.0  0.02         -0.423      -0.607
+B/mcprouter         0.59   27162      9.5     6.2   22.3    7.7    1.7     0.0  0.02          0.299       0.127
+C                   0.56    7325     12.4     4.5   29.3   12.3    0.0     0.1  0.00          0.466       0.243
+D/mcprouter/code    0.64   11637     11.4     5.5   35.1    9.7    1.6     0.1  0.01          0.502       0.297
+D/oracle/code       0.64    7156      7.3     3.6   21.9    7.1    0.0     0.1  0.01          0.555       0.424
+
+paired differences vs C (bootstrap 5,000, 95% CI):
+  A                  latency s     -2.130  [-8.557, +3.248]
+  A                  success       -0.179  [-0.359, +0.000]
+  A                  U(ll=.002)    -0.889  [-1.235, -0.572]
+  A                  U(ll=.02)     -0.851  [-1.266, -0.467]
+  B/mcprouter        latency s     -2.822  [-9.156, +2.684]
+  B/mcprouter        success       +0.026  [-0.205, +0.256]
+  B/mcprouter        U(ll=.002)    -0.167  [-0.512, +0.156]
+  B/mcprouter        U(ll=.02)     -0.116  [-0.535, +0.289]
+  D/mcprouter/code   latency s     -0.984  [-6.296, +3.629]
+  D/mcprouter/code   success       +0.077  [-0.128, +0.282]
+  D/mcprouter/code   U(ll=.002)    +0.036  [-0.175, +0.246]
+  D/mcprouter/code   U(ll=.02)     +0.053  [-0.217, +0.341]
+  D/oracle/code      latency s     -5.114  [-11.435, +0.314]
+  D/oracle/code      success       +0.077  [-0.128, +0.282]
+  D/oracle/code      U(ll=.002)    +0.089  [-0.124, +0.293]
+  D/oracle/code      U(ll=.02)     +0.181  [-0.094, +0.484]
