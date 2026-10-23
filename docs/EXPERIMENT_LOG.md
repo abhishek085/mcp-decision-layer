@@ -510,3 +510,19 @@ v3 changes: drop 85% of the trivial real-catalog-tool 'no' questions (kept 15% s
 ## P2.6 — LoRA training v3 finished (spark-s1-mcp-router-v3)
 5,791 examples (4,991 tool-need + 800 replay), 178 steps, 5,257 s of training + merge/save; loss ≈ 0 from step ~40 on tool-need batches (single-batch spikes of 0.2–0.7 coincide with replay-heavy batches). In-distribution validation (random 2% of the mix; 103 yes/no examples): accuracy 0.990, Brier 0.0136, ECE 0.011, fitted noul temperature 1.5455. Checkpoint training/ckpt/mcp-router-v3 (merged bf16, 8.4 GB, gitignored). The script only re-fits temperatures for question types present in the val split: choice was written as 1.0 — I restored v8's choice 2.5 and score 1.192 (NOT re-fitted; regression check pending). Served with the same vLLM image as the original (mdl-router :8356) behind a gateway on :8401 with this calibration.
 Honest expectation (see P2.5): near-zero training loss on a 11-family template distribution means the val number is NOT evidence of generalisation; the held-out test below is.
+
+## P2.7 — spark-s1-mcp-router-v3 vs zero-shot spark-s1 v8, 42-tool catalog (bench/toolsel2.py; 79 dev tasks, seeds 0,1; identical candidate lists; reports traces/toolsel2_router_v3_n0_report.txt vs traces/toolsel2_zeroshot_n0_report.txt)
+Complete-recall (frac-recall) / tools selected:
+| group (n) | θ | zero-shot v8 | fine-tuned v3 |
+|---|---|---|---|
+| all (79) | 0.002 | 1.000 / 5.1 | **1.000 / 3.3** |
+| all | 0.01 | 0.899 / 3.3 | **1.000 / 2.8** |
+| all | 0.05 | 0.835 / 2.5 | 0.975 / 2.6 |
+| all | 0.5 | 0.797 / 2.1 | 0.949 / 2.3 |
+| seen families & tools (45) | 0.01–0.5 | 0.73–0.87 / 1.7–3.1 | **1.000 / 2.1–2.2** |
+| unseen tools — hr/inventory/support/deployments (30) | 0.01 | 1.000 / 3.6 | 1.000 / 3.3 (no regression) |
+| unseen families (20) | 0.01 | 0.900 / 3.4 | **1.000 / 4.0** |
+| unseen families | ≥0.2 | 0.800 / 2.2 | 0.800 / 2.8 (no gain) |
+Reading: at 100% complete recall the fine-tune needs 2.8 tools instead of 5.1 (−45%); on in-distribution (seen) families it is perfect and sharper at every threshold. On the held-out (unseen) tool servers there is no regression (the "unfamiliar name ⇒ no" shortcut I worried about in P2.5 did not appear on these tasks). On unseen families it does NOT beat the zero-shot model at high thresholds (0.80 vs 0.80) — the training gain is largely template-family-specific, as expected from the narrow 11-family distribution.
+Caveats: dev tasks use the same template wording as the training templates (seen-family perfection is partly memorisation); thresholds compared on the same data; n small (unseen families n=20); the Gemma-paraphrased dev set (different writer), the 200/2,000-tool catalogs, the end-to-end agent runs, and the v8-skills regression check are still pending.
+Infra: starting two vLLM containers simultaneously crashed both (memory-profiling race: "Initial free memory 51.92 GiB, current free 53.71 GiB") — restarted one at a time; the bf16 router needs ~14% GPU memory (10% leaves too little KV cache: 1.65 vs 2.11 GiB needed at 64K) so it runs at --gpu-memory-utilization 0.14 --max-model-len 16384.
