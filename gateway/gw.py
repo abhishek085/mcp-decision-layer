@@ -203,7 +203,12 @@ async def json_phase(hub, task, client, model, exposed, m, steps, extra_body, ra
             except Exception: args = {}
             if tc.function.name == "request_more_tools":
                 m["more_tool_requests"] = m.get("more_tool_requests", 0) + 1
-                rest = [n for n in (ranking or list(hub.tools)) if n not in exposed][:10]
+                cap = m.get("more_tools_cap")
+                if cap is not None and m["more_tool_requests"] > cap:
+                    res = "No more tools can be added. Complete the task with the tools you have and give your best final answer."
+                    steps.append(dict(kind="fallback", cause="request_more_tools_denied")); m["result_tokens"] += ntok(res)
+                    msgs.append({"role": "tool", "tool_call_id": tc.id, "content": res}); continue
+                rest = [n for n in (ranking or list(hub.tools)) if n not in exposed][:(5 if cap is not None else 10)]
                 exposed.extend(rest); res = "Added tools: " + ", ".join(rest) if rest else "No more tools available."
                 steps.append(dict(kind="fallback", cause="request_more_tools", added=rest))
             else:
@@ -245,7 +250,7 @@ async def code_phase(hub, task, client, model, names, m, steps, extra_body, max_
     clean = bool(answer) and last_ok is not False and "execution limit" not in answer.lower()
     return answer, clean, err
 
-async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, tool_subset=None, shape=None, n_dist=0, ctx_limit=60000, ranking=None, fallback=True, allow_more=None, inject=None, screen=None, hub_out=None):
+async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, tool_subset=None, shape=None, n_dist=0, ctx_limit=60000, ranking=None, fallback=True, allow_more=None, inject=None, screen=None, hub_out=None, fallback_policy="json_more"):
     """cfg: A | B | C | D. B = JSON with a subset (+request_more_tools). D = subset + shape ('json'|'code'); code failures fall back to JSON (plan 4.4).
     tool_subset: names exposed (None = all). ranking: retrieval order used by request_more_tools."""
     steps = steps_out; m = dict(schema_tokens=0, result_tokens=0, tokens_in=0, tokens_out=0, llm_calls=0, fallbacks=0, exec_calls=0, tool_calls=0)
@@ -258,7 +263,15 @@ async def run_task(task, world, cfg, client, model, steps_out, extra_body=None, 
             answer, _ = await json_phase(hub, task, client, model, list(names), m, steps, extra_body, ranking, allow_more and cfg != "A", ctx_limit=ctx_limit)
         elif cfg == "C" or (cfg == "D" and shape == "code"):
             answer, clean, err = await code_phase(hub, task, client, model, names, m, steps, extra_body)
-            if cfg == "D" and fallback and not clean:
+            if cfg == "D" and fallback and not clean and fallback_policy == "full_code":
+                m["fallbacks"] += 1; steps.append(dict(kind="fallback", cause="subset_miss_full_code", err=err))
+                m["more_tools_cap"] = 2
+                answer, clean2, err2 = await code_phase(hub, task, client, model, list(hub.tools), m, steps, extra_body, max_exec=m['exec_calls'] + 3)
+                if not clean2:
+                    m["fallbacks"] += 1; steps.append(dict(kind="fallback", cause="full_code_failed_json", err=err2))
+                    note = f"NOTE: earlier scripted attempts did not finish cleanly ({err2 or err or 'no clean result'}). Some actions may already have been applied; check current state before repeating any side effect."
+                    answer, _ = await json_phase(hub, task, client, model, list(names), m, steps, extra_body, ranking, True, note=note, ctx_limit=ctx_limit)
+            elif cfg == "D" and fallback and not clean:
                 m["fallbacks"] += 1; cause = "script_error" if err else "no_clean_answer"
                 steps.append(dict(kind="fallback", cause=cause, err=err))
                 note = f"NOTE: an earlier scripted attempt did not finish cleanly ({err or 'no clean result'}). Some actions may already have been applied; check current state before repeating any side effect."

@@ -12,7 +12,7 @@ SUT = {"qwen": ("http://localhost:8888/v1", "Qwen3.8-27B"), "gemma": ("http://lo
 
 GEMMA = OpenAI(base_url='http://localhost:8002/v1', api_key='x', timeout=300)
 QWENR = OpenAI(base_url='http://localhost:8888/v1', api_key='x', timeout=300)
-RUN_TIMEOUT = 900; THETA = 0.002; TAU = 0.0; RULE_P = dict(min_large=1, fanout=5, chain=99); ORACLE = {}
+RUN_TIMEOUT = 900; FALLBACK_POLICY = 'json_more'; THETA = 0.002; TAU = 0.0; RULE_P = dict(min_large=1, fanout=5, chain=99); ORACLE = {}
 
 async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dist=0, attack=None, screen_tau=None):
     async with sem:
@@ -45,7 +45,7 @@ async def one(sem, task_id, salt, seed, size, cfg, sut, split, out, extra, n_dis
                     else: raise ValueError(shape_kind)
                     steps.append(dict(kind="router", what="shape", decision=shape, conf=conf, **sinfo))
                     if shape_kind == "spark" and conf < TAU: shape = "json"; steps.append(dict(kind="router", what="shape_low_conf_json", tau=TAU))
-            ans, met = await asyncio.wait_for(run_task(task, w, base_cfg, client, model, steps, extra_body=extra, n_dist=n_dist, ctx_limit=CTX[sut], tool_subset=subset, shape=shape, ranking=ranking, inject=inj, screen=screen, hub_out=hub_out), RUN_TIMEOUT)
+            ans, met = await asyncio.wait_for(run_task(task, w, base_cfg, client, model, steps, extra_body=extra, n_dist=n_dist, ctx_limit=CTX[sut], tool_subset=subset, shape=shape, ranking=ranking, inject=inj, screen=screen, hub_out=hub_out, fallback_policy=FALLBACK_POLICY), RUN_TIMEOUT)
             if rt["tokens"] or rt["ms"]:
                 met["router_tokens"] = rt["tokens"]; met["router_ms"] = rt["ms"]; met["total_tokens"] += rt["tokens"]; met["latency_s"] = round(met["latency_s"] + rt["ms"] / 1000, 2)
             if subset is not None: met["tool_recall"] = round(len(set(subset) & set(task.needed_tools)) / len(task.needed_tools), 3); met["n_exposed"] = len(subset)
@@ -73,9 +73,10 @@ async def main():
     ap.add_argument("--cfg", nargs="+", default=["A", "C"]); ap.add_argument("--sut", default="qwen"); ap.add_argument("--salt", default="dev")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0]); ap.add_argument("--size", default="medium"); ap.add_argument("--split", default="pilot")
     ap.add_argument("--tasks", nargs="*"); ap.add_argument("--conc", type=int, default=4); ap.add_argument("--out", required=True)
-    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--resume", action="store_true"); ap.add_argument("--oracle-from", nargs="*", default=[]); ap.add_argument("--stub-returns", action="store_true"); ap.add_argument("--attacks", nargs="*", default=[], help="vector:goal:style"); ap.add_argument("--screen-tau", type=float, default=None); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
+    ap.add_argument("--no-think", action="store_true"); ap.add_argument("--resume", action="store_true"); ap.add_argument("--oracle-from", nargs="*", default=[]); ap.add_argument("--stub-returns", action="store_true"); ap.add_argument("--fallback-policy", default="json_more"); ap.add_argument("--attacks", nargs="*", default=[], help="vector:goal:style"); ap.add_argument("--screen-tau", type=float, default=None); ap.add_argument("--ndist", type=int, default=0); ap.add_argument("--theta", type=float, default=0.002); ap.add_argument("--tau", type=float, default=0.0); ap.add_argument("--rule", default="1,5,99")
     a = ap.parse_args()
-    global THETA, TAU, RULE_P
+    global THETA, TAU, RULE_P, FALLBACK_POLICY
+    FALLBACK_POLICY = a.fallback_policy
     THETA, TAU = a.theta, a.tau; _r = [int(x) for x in a.rule.split(',')]; RULE_P = dict(min_large=_r[0], fanout=_r[1], chain=_r[2])
     for f in a.oracle_from:
         cells = {}
