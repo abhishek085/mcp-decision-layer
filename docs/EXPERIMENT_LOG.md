@@ -479,3 +479,14 @@ Records (training/build_records.py): per task text (original + verified paraphra
 Infra: first record build took >98 min because the tool-embedding cache was keyed on a freshly sampled pool each state; rewritten to embed each tool text once. CPU embedding also pushed SoC to 91 °C (thermal guard paused spark-s1 serving, which was not in use).
 Repo hygiene note: commit 2f4be9a pushed two generated files (mcp_router_mix.jsonl 75 MB, mcp_router_train.jsonl 70 MB) — GitHub warned (limit 100 MB, accepted). They are now untracked and gitignored (reproducible via training/build_records.py + make_mix.py). They remain in the remote history (~35 MB compressed in .git); removing them needs a history rewrite + force-push — NOT done, awaiting the user's decision.
 - 2026-10-23 09:32 UTC: user asked to PAUSE the training start for 20 minutes (do not start LoRA training before 09:52 UTC).
+
+## P2.3 — IMPORTANT baseline: zero-shot spark-s1 v8 in the NEW format (candidate list inside the state) — bench/toolsel2.py
+Report: traces/toolsel2_zeroshot_n0_report.txt · raw traces/toolsel2_zeroshot_n0.jsonl. Dev seeds 0,1 (79 tasks), catalog 42 tools, candidates = embedding top-30, one yes/no question per candidate, state = "Task: … Candidate tools: - name: description…". NO fine-tuning.
+| threshold | complete-recall | frac-recall | tools selected | extras |
+|---|---|---|---|---|
+| 0.002 | **1.000** | 1.000 | 5.1 | 3.0 |
+| 0.01 | 0.899 | 0.949 | 3.3 | 1.3 |
+| 0.05 | 0.835 | 0.916 | 2.5 | 0.6 |
+| 0.2–0.5 | 0.797 | 0.895 | 2.1 | 0.3 |
+(old format E5.1: 0.949 at 16.2 tools, 0.846 at 8.4, 0.590 at 3.7). Unseen-tool tasks (hr/inventory/support/deployments) 1.000 complete recall at every threshold; seen families/tools 0.867 at θ=0.01; unseen families 0.90.
+**Consequence:** a large share of the "spark-s1 is a weak zero-shot tool selector" finding (E5.1, E7.4, Part I summary item 3) was an artifact of my per-tool question WITHOUT the candidate list in the state; with the list, zero-shot v8 reaches 100% complete recall at ~5 tools. The fine-tune must therefore beat this stronger baseline (target: ≥0.95 complete recall at ≤3 tools selected, robust to paraphrase and larger catalogs), otherwise it adds nothing. Part I statements about spark-s1 as selector should be read with this correction. Caveats: thresholds chosen on the same 79 tasks; dev tasks are template-worded (Gemma-paraphrased dev tasks still to build); 42-tool catalog (200/2,000 runs below).
