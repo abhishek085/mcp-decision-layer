@@ -4,6 +4,7 @@ import httpx, numpy as np
 from openai import OpenAI
 
 SPARK = "http://localhost:8400/v1/decide"
+ROUTER_URL = "http://localhost:8401/v1/decide"
 _emb = None; _cache = {}
 def short(d, n=160): return re.sub(r"\s+", " ", d)[:n]
 
@@ -40,6 +41,18 @@ def select_tools(kind, task_text, tools, theta=0.002, llm_client=None, llm_model
         rk = embed_rank(task_text, tools); cand = [tools[i] for i in rk[:k_embed]]
         p, toks = spark_bool(task_text, [(t["name"], q_tool(t)) for t in cand]); info["tokens"] = toks
         sel = [n for n, v in p.items() if v >= theta]; info["probs"] = {n: round(v, 4) for n, v in p.items()}
+    elif kind == "mcp_router":
+        # fine-tuned spark-s1 tool router (candidate list inside the state; one yes/no per candidate). Router tokens use PREFIX-CACHED accounting:
+        # the state is processed once, plus each short question; raw_tokens = what the gateway reports (state repeated per question).
+        from bench.toolsel2 import ask_router
+        from training.build_records import render_state, Q_PROMPT
+        import bench.toolsel2 as _ts
+        rk = embed_rank(task_text, tools); cand = [tools[i] for i in rk[:k_embed]]
+        state = render_state(task_text, cand)
+        p, ms = ask_router(ROUTER_URL, None, state, [c["name"] for c in cand])
+        sel = [n for n, v in p.items() if v >= theta]; info["probs"] = {n: round(v, 4) for n, v in p.items()}
+        import tiktoken; enc = tiktoken.get_encoding("cl100k_base")
+        info["tokens"] = len(enc.encode(state)) + sum(len(enc.encode(Q_PROMPT.format(name=c["name"]))) for c in cand); info["raw_tokens"] = info["tokens"] * 0 + len(cand) * len(enc.encode(state))
     elif kind == "llm":
         rk = embed_rank(task_text, tools) if len(tools) > 60 else None
         cand = tools if rk is None else [tools[i] for i in rk[:60]]
