@@ -1,0 +1,14 @@
+39 tasks with all 9 (model x shape) arms; utility = success - 0.01/1K tokens - ll*latency_s
+
+lambda_latency=0.002:
+  fixed arms: qwen/C=0.920, qwen/D=0.857, gemma/D=0.823, gemma/C=0.683, gemma/A=0.637, nemotron/D=0.502, nemotron/C=0.466, qwen/A=0.319, nemotron/A=-0.423
+  best fixed arm ('qwen', 'C'): 0.920 | best single-model shape oracle: qwen 0.946, gemma 0.927, nemotron 0.722
+  JOINT (model x shape) oracle: 0.956 | family-level joint policy (leave-one-task-out): 0.899  vs best fixed: -0.021 [-0.078,+0.010]
+  oracle picks: {('gemma', 'C'): 20, ('qwen', 'C'): 8, ('nemotron', 'C'): 6, ('gemma', 'D/mcprouter/code'): 2, ('nemotron', 'D/mcprouter/code'): 2, ('qwen', 'A'): 1}
+
+lambda_latency=0.02:
+  fixed arms: qwen/C=0.849, qwen/D=0.747, gemma/D=0.542, gemma/A=0.484, nemotron/D=0.297, nemotron/C=0.243, gemma/C=0.169, qwen/A=0.168, nemotron/A=-0.607
+  best fixed arm ('qwen', 'C'): 0.849 | best single-model shape oracle: qwen 0.877, gemma 0.814, nemotron 0.587
+  JOINT (model x shape) oracle: 0.886 | family-level joint policy (leave-one-task-out): 0.827  vs best fixed: -0.023 [-0.077,+0.007]
+  oracle picks: {('qwen', 'C'): 26, ('gemma', 'C'): 7, ('nemotron', 'C'): 3, ('gemma', 'A'): 1, ('qwen', 'D/mcprouter/code'): 1, ('qwen', 'A'): 1}
+
