@@ -28,3 +28,15 @@ release/datasets/*/data/
 release/datasets/*/traces/
 release/**/*.gguf
 release/*.log
+
+# local-only notes and machine/ops files (kept on disk, not pushed)
+(local notes)
+(local notes)
+(local notes)
+(local notes)
+docs/recipes/
+*.pid
+*.log
+traces/regression/pid
+traces/p11n_rerun.json
+training/data/start_after.txt
