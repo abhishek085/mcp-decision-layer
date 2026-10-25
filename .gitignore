@@ -30,13 +30,13 @@ release/**/*.gguf
 release/*.log
 
 # local-only notes and machine/ops files (kept on disk, not pushed)
-(local notes)
-(local notes)
-(local notes)
-(local notes)
-docs/recipes/
 *.pid
 *.log
 traces/regression/pid
 traces/p11n_rerun.json
 training/data/start_after.txt
+# docs/: only the experiment record is public; everything else stays local
+docs/*
+!docs/EXPERIMENT_LOG.md
+!docs/PREREG.md
+!docs/RESULTS_SUMMARY.md
