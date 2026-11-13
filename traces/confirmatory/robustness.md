@@ -29,3 +29,32 @@
 | nemotron | H2 B-A | +0.397* | +0.376* | +0.183 | +0.592* | +0.571* | +0.378 | +0.983* | +0.961* | +0.769* |
 | nemotron | H3 D-C | +0.106 | +0.106 | +0.108 | +0.095 | +0.095 | +0.096 | +0.071 | +0.072 | +0.073 |
 | nemotron | H4 D-B | +0.238 | +0.256 | +0.425 | +0.366 | +0.385 | +0.553 | +0.623* | +0.642* | +0.810* |
+
+## 3. Ext-1: stub return-shape hints on the test split (hinted minus unhinted code mode, test seeds 0-2; family-cluster bootstrap; Holm over 3 agents on U)
+| agent | metric | n | hinted - unhinted | 95% cluster CI | raw p | Holm p (U only) |
+|---|---|---|---|---|---|---|
+| qwen | success | 119 | +0.017 | [-0.023,+0.080] | 0.7738 | |
+| qwen | U | 119 | +0.035 | [-0.010,+0.107] | 0.1958 | 0.1958 |
+| qwen | tokens | 119 | -1598.336 | [-2682.106,-805.222] | 0.0001 | |
+| gemma | success | 119 | +0.227 | [+0.119,+0.361] | 0.0001 | |
+| gemma | U | 119 | +0.296 | [+0.162,+0.459] | 0.0001 | 0.0003 |
+| gemma | tokens | 119 | -4372.244 | [-6872.607,-2132.553] | 0.0001 | |
+| nemotron | success | 119 | +0.395 | [+0.190,+0.571] | 0.0001 | |
+| nemotron | U | 119 | +0.478 | [+0.235,+0.693] | 0.0001 | 0.0003 |
+| nemotron | tokens | 119 | -6103.521 | [-9586.373,-2024.537] | 0.0028 | |
+
+## 4. Ext-2: H3 with more instances (family-cluster bootstrap; Holm over the 3 pooled H3 tests)
+| agent | sample | comparison | n | dU | 95% cluster CI | raw p | Holm p (pooled H3) | d success [CI] |
+|---|---|---|---|---|---|---|---|---|
+| qwen | seeds 0-5 pooled | H3 D-C | 238 | -0.028 | [-0.075,+0.000] | 0.0512 | 0.1536 | -0.013 [-0.055,+0.012] |
+| qwen | seeds 0-5 pooled | ref D-oracle - C | 238 | +0.018 | [+0.008,+0.031] | 0.0001 |  | +0.004 [+0.000,+0.015] |
+| qwen | seeds 3-5 only | H3 D-C | 119 | -0.032 | [-0.076,-0.007] | 0.0001 |  | -0.017 [-0.057,+0.000] |
+| qwen | seeds 3-5 only | ref D-oracle - C | 119 | +0.014 | [+0.007,+0.019] | 0.0001 |  | +0.000 [+0.000,+0.000] |
+| gemma | seeds 0-5 pooled | H3 D-C | 238 | +0.099 | [-0.011,+0.273] | 0.1058 | 0.2116 | +0.067 [+0.004,+0.164] |
+| gemma | seeds 0-5 pooled | ref D-oracle - C | 238 | +0.145 | [+0.007,+0.337] | 0.0180 |  | +0.092 [+0.000,+0.211] |
+| gemma | seeds 3-5 only | H3 D-C | 119 | +0.121 | [+0.010,+0.281] | 0.0248 |  | +0.092 [+0.021,+0.189] |
+| gemma | seeds 3-5 only | ref D-oracle - C | 119 | +0.126 | [-0.018,+0.312] | 0.1000 |  | +0.076 [-0.024,+0.207] |
+| nemotron | seeds 0-5 pooled | H3 D-C | 238 | +0.109 | [-0.071,+0.294] | 0.2190 | 0.2190 | +0.147 [-0.008,+0.303] |
+| nemotron | seeds 0-5 pooled | ref D-oracle - C | 238 | +0.112 | [-0.041,+0.282] | 0.1550 |  | +0.143 [+0.037,+0.267] |
+| nemotron | seeds 3-5 only | H3 D-C | 119 | +0.123 | [-0.091,+0.343] | 0.2554 |  | +0.176 [+0.000,+0.355] |
+| nemotron | seeds 3-5 only | ref D-oracle - C | 119 | +0.111 | [-0.096,+0.310] | 0.2590 |  | +0.160 [+0.026,+0.302] |

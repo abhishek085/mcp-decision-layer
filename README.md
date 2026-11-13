@@ -22,18 +22,22 @@ This repository contains the harness, the tasks, the raw run records and the ana
 
 Outcome measure: utility `U = success − 0.01 × tokens/1000 − 0.002 × latency_s`, where success is checked against the final state of a simulated world, not against what the model says.
 
-## What was found (pre-registered test split, 119 tasks × 3 agents × 5 set-ups)
+## What was found
 
-* **H1** is supported for Qwen3.8-27B and Nemotron-3-Nano; code mode also cuts tokens by 70–90 % for all three agents.
-* **H3 is not confirmed** for any agent. The pattern seen during development (a router helps the weaker coders, not the strongest) is there in the point estimates but is statistically inconclusive.
-* **H4** is supported for Qwen; the evidence is weaker for the other two once results are clustered by task family.
-* Exploratory analyses (development seeds) suggest that telling the agent what each tool *returns* matters a lot, that choosing the call shape adds nothing, and that routers need a bounded fallback.
+On the sealed test split (119 tasks × 3 agents × 5 set-ups, pre-registered):
 
-Everything above, with confidence intervals, corrections for multiple comparisons, robustness checks and limitations, is in the paper. The per-run records and the analysis outputs are in [`traces/confirmatory/`](traces/confirmatory).
+* **H1 (code mode beats plain MCP)** is supported for Qwen3.8-27B and Nemotron-3-Nano, also when results are clustered by task family; code mode cuts tokens by 70–90 % for all three agents.
+* **H3 (router + code mode beats code mode alone) is not confirmed** for any agent. A pre-specified extension on 119 further unseen tasks (238 in total) gives the same picture: slightly negative for Qwen, positive for Gemma and Nemotron, none significant after correction.
+* **H4 (router + code mode beats router + JSON)** is supported for Qwen; directionally positive for the others.
+* **Return-shape hints in the stubs matter.** Removing them lowers code-mode success by 22.7 points (Gemma) and 39.5 points (Nemotron), with no significant effect for Qwen — a larger effect than adding a router.
+
+Exploratory development-set analyses (not confirmatory): choosing the call shape adds nothing over "always code with a fallback", an unbounded fallback made the decision layer 14× slower at 2,000 tools, and a prompted LLM router can be hijacked by a poisoned tool description.
+
+Confidence intervals, multiple-comparison corrections, robustness checks and limitations are in the paper. The per-run records and analysis outputs are in [`traces/confirmatory/`](traces/confirmatory); start with `analysis.md` and `robustness.md`.
 
 ## Pre-registration
 
-The protocol is in [`docs/PREREG.md`](docs/PREREG.md). Its confirmatory part was committed before any run on the sealed test split, and the configuration was frozen at the git tag `confirmatory-freeze-v1`. Analyses added after the first confirmatory results (a task-family bootstrap, sensitivity to the utility weights, extra test instances, a stub-hint ablation) are specified in the same file under *Extension protocol* and are labelled as extensions.
+The protocol is in [`docs/PREREG.md`](docs/PREREG.md). Its confirmatory part was committed before any run on the sealed test split, and the configuration was frozen at the git tag `confirmatory-freeze-v1`. Analyses added after the first confirmatory results (a task-family bootstrap, sensitivity to the utility weights, 119 extra test instances, a stub-hint ablation) are specified in the same file under *Extension protocol*, before they were run, and are labelled as extensions.
 
 ## Repository layout
 
