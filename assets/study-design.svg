@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800" font-family="Helvetica, Arial, sans-serif">
+<defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#5b6577"/></marker></defs>
+<rect width="1000" height="800" rx="14" fill="#ffffff" stroke="#d7dce5"/>
+<text x="20" y="38" font-size="20" font-weight="700" fill="#1b2433">1. What happens in one run</text>
+<rect x="20" y="64" width="120" height="92" rx="10" fill="#fff7e6" stroke="#d9941a" stroke-width="1.6"/>
+<text x="80.0" y="88.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2433">Task</text>
+<text x="80.0" y="106.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">“Find the lead of</text>
+<text x="80.0" y="124.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">team X and email</text>
+<text x="80.0" y="142.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">them the report”</text>
+<rect x="180" y="64" width="190" height="92" rx="10" fill="#f1ecff" stroke="#7a56d6" stroke-width="1.6"/>
+<text x="275.0" y="88.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2433">Decision layer</text>
+<text x="275.0" y="106.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">(optional) a small model</text>
+<text x="275.0" y="124.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">picks the 2–3 tools</text>
+<text x="275.0" y="142.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">that are needed</text>
+<rect x="410" y="64" width="150" height="92" rx="10" fill="#eef4ff" stroke="#3b6fd4" stroke-width="1.6"/>
+<text x="485.0" y="97.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2433">Agent (LLM)</text>
+<text x="485.0" y="115.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">Qwen · Gemma ·</text>
+<text x="485.0" y="133.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">Nemotron</text>
+<rect x="600" y="58" width="190" height="48" rx="10" fill="#eaf7ee" stroke="#2f9e57" stroke-width="1.6"/>
+<text x="695.0" y="78.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2433">JSON tool calls</text>
+<text x="695.0" y="96.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">one step at a time</text>
+<rect x="600" y="114" width="190" height="48" rx="10" fill="#eaf7ee" stroke="#2f9e57" stroke-width="1.6"/>
+<text x="695.0" y="134.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2433">Script in a sandbox</text>
+<text x="695.0" y="152.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">many calls, short answer</text>
+<rect x="830" y="64" width="150" height="92" rx="10" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.6"/>
+<text x="905.0" y="97.0" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2433">MCP tool servers</text>
+<text x="905.0" y="115.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">42 tools + up to</text>
+<text x="905.0" y="133.0" text-anchor="middle" font-size="13" font-weight="400" fill="#1b2433">1,958 distractors</text>
+<line x1="140" y1="110" x2="178" y2="110" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<line x1="370" y1="110" x2="408" y2="110" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<line x1="560" y1="96" x2="598" y2="82" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<line x1="560" y1="124" x2="598" y2="138" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<line x1="790" y1="82" x2="828" y2="98" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<line x1="790" y1="138" x2="828" y2="122" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<rect x="20" y="180" width="960" height="40" rx="10" fill="#fdecec" stroke="#d64545" stroke-width="1.6"/>
+<text x="500" y="205" text-anchor="middle" font-size="14" fill="#1b2433"><tspan font-weight="700">Verifier</tspan> checks the final state of the simulated world (not the model’s words) → success, tokens, latency</text>
+<line x1="905" y1="156" x2="905" y2="178" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<text x="20" y="262" font-size="20" font-weight="700" fill="#1b2433">2. The four set-ups that are compared</text>
+<text x="440" y="302" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2433">Calls are made as… JSON, step by step</text>
+<text x="780" y="302" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2433">… a script (“code mode”)</text>
+<text x="20" y="364" font-size="14" font-weight="700" fill="#1b2433">The agent sees</text><text x="20" y="383" font-size="14" fill="#1b2433">all the tools</text>
+<text x="20" y="466" font-size="14" font-weight="700" fill="#1b2433">A decision layer</text><text x="20" y="485" font-size="14" fill="#1b2433">picks the tools</text>
+<rect x="290" y="314" width="300" height="100" rx="10" fill="#eef4ff" stroke="#3b6fd4" stroke-width="1.6"/>
+<text x="440.0" y="360.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1b2433">A · Plain MCP</text>
+<text x="440.0" y="378.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1b2433">the baseline everyone starts with</text>
+<rect x="630" y="314" width="300" height="100" rx="10" fill="#eaf7ee" stroke="#2f9e57" stroke-width="1.6"/>
+<text x="780.0" y="351.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1b2433">C · Code mode</text>
+<text x="780.0" y="369.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1b2433">agent writes one script;</text>
+<text x="780.0" y="387.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1b2433">only the result comes back</text>
+<rect x="290" y="430" width="300" height="100" rx="10" fill="#f1ecff" stroke="#7a56d6" stroke-width="1.6"/>
+<text x="440.0" y="467.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1b2433">B · Router + JSON</text>
+<text x="440.0" y="485.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1b2433">small model picks tools,</text>
+<text x="440.0" y="503.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1b2433">agent calls them one by one</text>
+<rect x="630" y="430" width="300" height="100" rx="10" fill="#fff7e6" stroke="#d9941a" stroke-width="1.6"/>
+<text x="780.0" y="467.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1b2433">D · Router + code mode</text>
+<text x="780.0" y="485.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1b2433">small model picks tools, agent</text>
+<text x="780.0" y="503.0" text-anchor="middle" font-size="15" font-weight="400" fill="#1b2433">scripts them (JSON as fallback)</text>
+<text x="20" y="582" font-size="20" font-weight="700" fill="#1b2433">3. How the evidence was gathered</text>
+<rect x="20" y="610" width="215" height="100" rx="10" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.6"/>
+<text x="127.5" y="647.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2433">Exploratory</text>
+<text x="127.5" y="665.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">development runs</text>
+<text x="127.5" y="683.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">hypotheses, tuning</text>
+<line x1="235" y1="660" x2="263" y2="660" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<rect x="265" y="610" width="215" height="100" rx="10" fill="#f1ecff" stroke="#7a56d6" stroke-width="1.6"/>
+<text x="372.5" y="647.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2433">Pre-registered</text>
+<text x="372.5" y="665.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">protocol frozen</text>
+<text x="372.5" y="683.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">before any test run</text>
+<line x1="480" y1="660" x2="508" y2="660" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<rect x="510" y="610" width="215" height="100" rx="10" fill="#eaf7ee" stroke="#2f9e57" stroke-width="1.6"/>
+<text x="617.5" y="647.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2433">Sealed test split</text>
+<text x="617.5" y="665.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">119 new tasks · 3 agents</text>
+<text x="617.5" y="683.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">5 set-ups · 1,785 runs</text>
+<line x1="725" y1="660" x2="753" y2="660" stroke="#5b6577" stroke-width="2" marker-end="url(#a)"/>
+<rect x="755" y="610" width="215" height="100" rx="10" fill="#fff7e6" stroke="#d9941a" stroke-width="1.6"/>
+<text x="862.5" y="647.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2433">Extension</text>
+<text x="862.5" y="665.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">more new tasks and a</text>
+<text x="862.5" y="683.0" text-anchor="middle" font-size="14" font-weight="400" fill="#1b2433">stub-hint ablation</text>
+<text x="500" y="745" text-anchor="middle" font-size="13" fill="#5b6577">Agents: Qwen3.8-27B · Gemma-4-26B-A4B · Nemotron-3-Nano-30B-A3B.   Plain MCP A is compared with C, B with D, and D with C.</text>
+<text x="500" y="768" text-anchor="middle" font-size="13" fill="#5b6577">Utility = success − 0.01 × (tokens / 1000) − 0.002 × latency (s)</text>
+</svg>

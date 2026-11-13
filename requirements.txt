@@ -1,0 +1,8 @@
+mcp<2
+openai
+httpx
+numpy
+scipy
+tiktoken
+fastembed
+pandas

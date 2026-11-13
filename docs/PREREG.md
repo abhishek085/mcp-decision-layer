@@ -1,16 +1,16 @@
-# PREREG (written 2026-10-22, AFTER the A-vs-C pilot v1/v2 on Qwen — a deviation from plan Phase 0; see EXPERIMENT_LOG E4.1/E4.2)
+# PREREG (written 2026-10-22, AFTER the A-vs-C pilot v1/v2 on Qwen)
 Everything below applies to results produced AFTER this commit. Pilot v1/v2 A-vs-C results are exploratory.
 
-Hypotheses: H1..H6 as in plan Sec 1.
+Hypotheses: H1 code mode (C) vs plain MCP (A); H2 router+JSON (B) vs A; H3 router+code (D) vs C; H4 D vs B; H5 a learned shape router vs rules; H6 code mode does not raise attack success.
 Primary metrics: success, total tokens, latency, U = success − λt·(tokens/1000) − λl·latency_s. Primary λ pair: λt = 0.01, λl = 0.002 (chosen before seeing D/B results; a grid is also reported).
 Margins: success non-inferiority 2 pp (note pilot n=36 pairs cannot resolve this; confirmatory runs need ≥ ~300 task-seed pairs per arm). Minimum effect on U: 0.03 (≈ 3 pp success or 3K tokens at primary λ).
-Gate (Phase 6): proceed to training only if oracle(U over {A,C}) − max(always-A, always-C) > 0.03 AND the best rule captures < 60% of that gap.
-Tool recall threshold (Phase 5): ≥ 0.95 at catalog size 20 and ≥ 0.90 at 200.
+Gate: proceed to training only if oracle(U over {A,C}) − max(always-A, always-C) > 0.03 AND the best rule captures < 60% of that gap.
+Tool recall threshold: ≥ 0.95 at catalog size 20 and ≥ 0.90 at 200.
 Sample sizes: pilot = 18 tasks × 3 seeds; dev and sealed test sets are NOT yet built (tasks use World(salt="dev")); sealed test will use salt="test" and be opened once.
-Analysis: paired bootstrap (5,000+ resamples), Holm correction over H1–H6, ablations per plan 11.3.
+Analysis: paired bootstrap (5,000+ resamples), Holm correction over H1–H6.
 Exclusions: runs with infrastructure errors (logged, counted separately). Tasks failing the solver check.
 Thinking mode: pilots use Qwen thinking OFF (enable_thinking=false); a thinking-ON subset is a pre-declared robustness arm.
-Latency: only from serial passes (concurrency 1, no other SUT active), see E1.3.
+Latency: only from serial passes (concurrency 1, no other SUT active).
 Deviations: logged and labelled exploratory.
 
 ---
@@ -28,3 +28,11 @@ Everything above this line was exploratory (dev worlds, harness changed during t
 **Exclusions and failures.** A run that exceeds the 900 s cap, hangs, or errors inside the agent loop counts as a failure (success 0, latency = 900 s). Runs lost to infrastructure faults (container crash, HTTP error from the router or serving stack, wrong serving configuration) are re-run once under the identical configuration and the incident is logged; no result-dependent re-runs. Cells missing after retries are reported as missing, never imputed.
 
 **Not tested here (stated limitations):** simulated per-call tool latency; thinking-enabled agents; real third-party MCP servers; paraphrased wording of the test tasks; security on more than one model.
+
+---
+## Extension protocol (written 2026-11-13 17:04 UTC, AFTER the confirmatory run on test seeds 0-2 was completed and analysed, BEFORE any extension run)
+Motivation (review of the first draft): (a) the confirmatory run used 119 instances although this file asks for >= ~300 task-seed pairs per arm, (b) the title claim about stub return-shape hints was only tested on development seeds, (c) bootstrap should respect clustering by task family. These extension analyses are **not** part of the 12-comparison Holm family above and are labelled as extensions everywhere. Frozen configuration unchanged (tag confirmatory-freeze-v1), same flags, serial, one run per cell, same hang rule.
+
+**Ext-1 (stub ablation on the test split).** Code mode C WITHOUT return-shape hints (no --stub-returns), test seeds 0-2 (119 instances), all three agents, paired against the already-run hinted C. Endpoints: success difference and U difference (hinted minus unhinted). Paired family-cluster bootstrap, Holm over the 3 agents.
+**Ext-2 (replication of H3 with more instances).** NEW test instances: salt test, seeds 3-5, size medium (119 instances; verified solvable and deterministic before any run, 0 failures), configs C, D/mcprouter/code, D/oracle/code, all three agents. Primary: H3 (D minus C, utility U lambda_l = 0.002) per agent pooled over test seeds 0-5 (238 instances), family-cluster bootstrap (10,000 resamples), Holm over the 3 pooled tests; seeds 3-5 alone reported as the out-of-sample replication. Also reported for ALL original comparisons: family-cluster bootstrap intervals and a lambda sensitivity grid (lambda_t in {0.005, 0.01, 0.02}, lambda_l in {0, 0.002, 0.02}) computed from existing traces (no new runs).
+Nothing else will be run or analysed under this extension. Results will be reported whatever they show.

@@ -1,8 +1,8 @@
 # spark-s1-mcp-router: LoRA SFT on top of the v8 bf16 checkpoint. New 'mcp_tool_need' records (Nemotron-written, Qwen-verified, code-labelled) + replay.
-model: /home/admin/llm-workspace/Open-Spark-Jev/checkpoints/v8-4b
-output_dir: /home/admin/llm-workspace/mcp-decision-layer/training/ckpt/mcp-router-v3
+model: ../Open-Spark-Jev/checkpoints/v8-4b
+output_dir: training/ckpt/mcp-router-v3
 data:
-  - /home/admin/llm-workspace/mcp-decision-layer/training/data/mcp_router_mix_v3.jsonl
+  - training/data/mcp_router_mix_v3.jsonl
 seed: 0
 val_frac: 0.02
 max_len: 2048

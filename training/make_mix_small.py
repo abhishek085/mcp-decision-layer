@@ -6,7 +6,7 @@ by = collections.defaultdict(list)
 for r in recs: by[r["meta"]["family"]].append(r)
 keep = []
 for f, rs in by.items(): random.shuffle(rs); keep += rs[:cap]
-src = "/home/admin/llm-workspace/Open-Spark-Jev/data/mixes/v7_13_train.jsonl"
+src = "../Open-Spark-Jev/data/mixes/v7_13_train.jsonl"
 rows = [l for l in open(src) if len(l) < 6000]
 rep = random.sample(rows, n_replay)
 mix = [json.dumps(r) + "\n" for r in keep] + rep; random.shuffle(mix)

@@ -1,42 +1,42 @@
-# env / caches
+# Python / environment
 .venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 .ipynb_checkpoints/
-# scratch + raw outputs (final traces are tracked; scratch is not)
-traces/scratch_*
-*.out
-nohup.out
-# secrets / local config
+
+# Secrets and local configuration
 .env
 *.key
 *.pem
 *token*
-# bulky or machine-specific
+
+# Model weights and large artifacts (hosted on Hugging Face)
 *.safetensors
 *.gguf
 *.bin
-.claude/
-worlds/distractors_raw/
-# generated training records / checkpoints (reproducible from training/*.py + the small verified source files)
-training/data/mcp_router_*.jsonl
 training/ckpt/
-training/data/*.out
-training/data/*.pid
-release/datasets/*/data/
-release/datasets/*/traces/
-release/**/*.gguf
-release/*.log
+training/data/
+worlds/distractors_raw/
 
-# local-only notes and machine/ops files (kept on disk, not pushed)
+# Scratch output, process files, logs
+*.out
 *.pid
 *.log
+*.stdout
+nohup.out
+traces/scratch_*
 traces/regression/pid
 traces/p11n_rerun.json
-training/data/start_after.txt
-# docs/: only the experiment record is public; everything else stays local
+traces/confirmatory/aborted/
+
+# Local-only working files (not part of the repository)
 docs/*
-!docs/EXPERIMENT_LOG.md
 !docs/PREREG.md
-!docs/RESULTS_SUMMARY.md
+release/
+paper/
+mcp-decision-layer-plan.md
+bench/gguf_*
+bench/watch_run.sh
+traces/gguf_*
+traces/router_attack_finetuned_report.txt

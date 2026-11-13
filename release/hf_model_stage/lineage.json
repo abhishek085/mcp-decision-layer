@@ -1,9 +1,0 @@
-{"release_id": "spark-s1-mcp-router-4b-r1",
- "family": "spark-s1 MCP tool router (a task-specific derivative; NOT a new spark-s1 base release and NOT 'v8')",
- "base": "internal bf16 checkpoint of spark-s1-4b-v8 (Open-Spark-Jev checkpoints/v8-4b; backbone Qwen3.5-4B); only the NVFP4 build of v8 is published",
- "method": "LoRA SFT r=16 alpha=32, lambda_brier=1.0, 1 epoch, lr 5e-5, 178 steps on 5,791 examples (4,991 tool-need + 800 replay rows from the v7_13 mix), LoRA merged into the weights",
- "task": "Boolean 'is tool X needed to complete the task?' over a candidate list given in the state",
- "data": "task templates over a disjoint synthetic MCP world; paraphrases and tool aliases written by NVIDIA Nemotron-3-Nano-30B-A3B and verified by Qwen3.8-27B; negatives from the automatelab/mcp-servers-tool-catalog (CC-BY-4.0); labels from code",
- "internal_training_runs": "v1 (aborted), v2 (aborted, shortcut), v3 (this release)",
- "calibration": "noul temperature 1.5455 fitted on the validation split; choice 2.5 and score 1.192 copied from v8 (not re-fitted)",
- "date": "2026-10-23"}

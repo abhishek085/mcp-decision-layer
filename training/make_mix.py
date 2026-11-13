@@ -3,7 +3,7 @@ import json, random, sys
 random.seed(0)
 new = [l for l in open("training/data/mcp_router_train.jsonl")]
 n_replay = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
-src = "/home/admin/llm-workspace/Open-Spark-Jev/data/mixes/v7_13_train.jsonl"
+src = "../Open-Spark-Jev/data/mixes/v7_13_train.jsonl"
 rows = []
 with open(src) as f:
     for i, l in enumerate(f):

@@ -1,5 +1,0 @@
-== GGUF Q4_K_M: 79 tasks, 2370 candidate scores
-   logit correlation 0.9950 | mean |dP| 0.0041 | p99 |dP| 0.104 | max |dP| 0.845
-   th=0.01: decision agreement 0.9928 | complete-recall ref 1.000 vs gguf 1.000 | tools ref 2.81 vs gguf 3.03
-   th=0.05: decision agreement 0.9962 | complete-recall ref 0.975 vs gguf 0.962 | tools ref 2.57 vs gguf 2.58
-   th=0.3: decision agreement 0.9945 | complete-recall ref 0.949 vs gguf 0.949 | tools ref 2.34 vs gguf 2.41
